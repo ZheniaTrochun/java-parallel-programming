@@ -1,0 +1,10 @@
+{"id":9,"name":"Negligent Green bee-eater","age":47,"randomNumber":723131986,"randomString":"TfakxejgcK"}
+{"id":8,"name":"Squeaky Butterfly","age":35,"randomNumber":-571684649,"randomString":"DnMSmbnbUE"}
+{"id":7,"name":"Filthy Reindeer","age":105,"randomNumber":-733920109,"randomString":"SAteurlyh9"}
+{"id":6,"name":"Hollow Emperor penguin","age":131,"randomNumber":1213210653,"randomString":"HbQIvyRpfU"}
+{"id":5,"name":"Supple African bush elephant","age":38,"randomNumber":-1075333018,"randomString":"wEcANhUWwy"}
+{"id":4,"name":"Uncanny Little penguin","age":17,"randomNumber":-1278402959,"randomString":"GKXgsqGw9S"}
+{"id":3,"name":"Sketchy Golden lion tamarin","age":135,"randomNumber":-1916440100,"randomString":"X5Z1YmXkLs"}
+{"id":2,"name":"Left Guinea pig","age":56,"randomNumber":1593658695,"randomString":"nb638E02js"}
+{"id":1,"name":"Dumpy Horn shark","age":11,"randomNumber":864694291,"randomString":"t4TKTFd6ai"}
+{"id":0,"name":"Greedy Marsh frog","age":88,"randomNumber":-68302002,"randomString":"Y4rJEfd53M"}
