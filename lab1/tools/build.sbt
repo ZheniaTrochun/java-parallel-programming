@@ -6,6 +6,7 @@ scalaVersion := "2.12.6"
 
 
 libraryDependencies += "com.google.code.gson" % "gson" % "2.8.5"
+libraryDependencies += "com.typesafe" % "config" % "1.3.2"
 libraryDependencies += "org.scalatest" % "scalatest_2.12" % "3.0.5" % "test"
 libraryDependencies += "com.storm-enroute" %% "scalameter" % "0.11-SNAPSHOT" % "test"
 

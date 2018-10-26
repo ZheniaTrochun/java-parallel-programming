@@ -16,7 +16,6 @@ import reactor.ipc.netty.http.server.HttpServer;
 @EnableWebFlux
 @Configuration
 @ComponentScan
-//@SpringBootApplication
 @EnableAutoConfiguration
 public class Application {
 

@@ -15,7 +15,9 @@ object ParallelGenerator {
   }
 
 //  futures implementation
-  def generate[A](generator: Int => Generator[A], count: Int)(threads: Int, callback: List[A] => List[A])(implicit ex: ExecutionContext): Future[List[A]] = {
+  def generate[A](generator: Int => Generator[A], count: Int)(threads: Int, callback: List[A] => List[A])
+                 (implicit ex: ExecutionContext): Future[List[A]] = {
+
     Future.traverse ((0 until threads).toList) (i =>
       Future {
         callback(
