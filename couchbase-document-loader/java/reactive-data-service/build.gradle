@@ -10,11 +10,14 @@ buildscript {
     }
 }
 
-apply plugin: 'java'
-apply plugin: 'application'
-apply plugin: 'eclipse'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
+plugins {
+    id 'java' apply true
+    id 'application' apply true
+    id 'eclipse' apply true
+    id 'org.springframework.boot' apply true
+//    id 'io.spring.dependency-management' apply true
+    id 'net.ltgt.apt' version '0.10'
+}
 
 mainClassName = 'com.yevhenii.service.Application'
 
@@ -28,15 +31,14 @@ repositories {
 
 
 dependencies {
-    compile('org.springframework.boot:spring-boot-starter-actuator')
-    compile('org.springframework.boot:spring-boot-starter-webflux')
+    compile('org.springframework.boot:spring-boot-starter-actuator:2.0.5.RELEASE')
+    compile('org.springframework.boot:spring-boot-starter-webflux:2.0.5.RELEASE')
     compile('org.springframework:spring-context')
-    compile('io.netty:netty-buffer')
-    compile('io.projectreactor.ipc:reactor-netty')
+    compile('io.netty:netty-buffer:1.4.30.Final')
+    compile('io.projectreactor.ipc:reactor-netty:0.7.11.RELEASE')
 
     compile group: 'org.springframework.cloud', name: 'spring-cloud-netflix-core', version: '2.0.1.RELEASE'
 
-    // https://mvnrepository.com/artifact/org.springframework.cloud/spring-cloud-starter-parent
     compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-parent', version: 'Finchley.RELEASE', ext: 'pom'
 
     compile('org.hibernate:hibernate-core:5.3.6.Final')
@@ -45,8 +47,9 @@ dependencies {
     compile('com.couchbase.client:java-client:2.6.2')
     compile('com.github.akarnokd:rxjava2-interop:0.13.2')
     compile('com.google.code.gson:gson:2.8.5')
-    runtime('org.postgresql:postgresql')
-    compileOnly('org.projectlombok:lombok')
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('io.projectreactor:reactor-test')
+
+    compileOnly('org.projectlombok:lombok:1.18.2')
+    apt('org.projectlombok:lombok:1.18.2')
 }
