@@ -29,4 +29,4 @@ services:
       - /root/java-parallel-programming/couchbase-document-loader/java/reactive-data-service:/app/generated
 
 networks:
-  - doc-loader
+  doc-loader:
