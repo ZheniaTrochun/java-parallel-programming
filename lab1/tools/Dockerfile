@@ -14,6 +14,6 @@ RUN sbt assembly
 RUN mkdir data
 RUN mkdir generated
 
-RUN java -jar target/scala-2.12/generation-tool-assembly-0.1.jar /data/data.txt
+RUN java -jar target/scala-2.12/generation-tool-assembly-0.1.jar data/data.txt
 
 CMD ["./copy.sh"]
