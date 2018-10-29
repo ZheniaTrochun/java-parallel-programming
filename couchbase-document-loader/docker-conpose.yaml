@@ -1,0 +1,32 @@
+ version: '3.3'
+
+ services:
+   couch:
+     image: couch:latest
+     build:
+       context: ./couchbase
+     networks:
+       - doc-loader
+
+   loader-app:
+     image: loader-app:latest
+     build:
+       context: ./java/reactive-data-service
+     ports:
+       - "8080:8080"
+     depends_on:
+       - couch
+       - generation-tool
+     restart: on-failure
+     networks:
+       - doc-loader
+
+   generation-tool:
+     image: generation-tool:latest
+     build:
+       context: ./tools
+     volumes:
+       - /root/java-parallel-programming/couchbase-document-loader/java/reactive-data-service:/app/generated
+
+networks:
+  - doc-loader
