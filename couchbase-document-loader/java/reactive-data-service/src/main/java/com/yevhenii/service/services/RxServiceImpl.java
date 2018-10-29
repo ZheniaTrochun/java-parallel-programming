@@ -37,7 +37,7 @@ public class RxServiceImpl implements RxService {
                          AppPropertyHolder properties) {
         this.dao = dao;
         this.toDocumentConverter = toDocumentConverter;
-        this.DEFAULT_FILE = "C:\\Users\\Yevhenii\\IdeaProjects\\kpi\\java-parallel-programming\\lab-2-new\\lab1\\tools\\data.txt";
+        this.DEFAULT_FILE = "data.txt";
 //        this.DEFAULT_FILE = properties.getDatafile();
         this.PARALLELISM = 10;
 //        this.PARALLELISM = properties.getParallelism();
