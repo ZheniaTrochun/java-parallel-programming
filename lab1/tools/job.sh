@@ -2,4 +2,4 @@
 
 docker build -t generation-tool .
 
-docker run --rm --name=generation-tool -d -v ../data:/app/data generation-tool
+docker run --rm --name=generation-tool -d -v /root/data:/app/generated generation-tool
