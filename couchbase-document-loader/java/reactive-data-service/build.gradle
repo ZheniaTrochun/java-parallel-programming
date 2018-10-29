@@ -14,8 +14,7 @@ plugins {
     id 'java' apply true
     id 'application' apply true
     id 'eclipse' apply true
-    id 'org.springframework.boot' apply true
-//    id 'io.spring.dependency-management' apply true
+    id 'org.springframework.boot' version '2.0.5.RELEASE' apply true
     id 'net.ltgt.apt' version '0.10'
 }
 
