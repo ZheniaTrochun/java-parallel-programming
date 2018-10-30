@@ -16,7 +16,7 @@ object GenerationTool {
   val ageGenerator = AgeGenerator()
   val randomGenerator = RandomGenerator()
 
-  val gen = PetGenerator(adjectives, animals)
+  val gen = DataObjectGenerator(adjectives, animals)
 
 
   def main(args: Array[String]): Unit = {
@@ -24,9 +24,9 @@ object GenerationTool {
     val objectCount = getArg(args, 1).fold(Configs.DEFAULT_OBJECT_COUNT)(_.toInt)
     val threadsCount = getArg(args, 2).fold(Configs.DEFAULT_THREADS)(_.toInt)
 
-    val writer = FileUtils.objectWriter[Pet](resultFile)
+    val writer = FileUtils.objectWriter[SimpleDataObject](resultFile)
 
-    val onPartComplete = (list: List[Pet]) => list.map(writer(_))
+    val onPartComplete = (list: List[SimpleDataObject]) => list.map(writer(_))
 
     val time = System.currentTimeMillis()
     Await.ready(

@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
 import java.util.List;
@@ -19,8 +20,8 @@ import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-@Controller("/data/upload")
 @Slf4j
+@RestController
 public class UploadControllerImpl implements UploadController {
 
     private final SequentialService sequentialService;
@@ -38,24 +39,24 @@ public class UploadControllerImpl implements UploadController {
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.GET, path = "/completable-future")
+    @RequestMapping(method = RequestMethod.GET, path = "/data/upload/completable-future")
     public ResponseEntity<Integer> completableFutureUpload() throws ExecutionException, InterruptedException {
         CompletableFuture<Integer> future =
                 completableFutureService.loadDataFromFile(Optional.empty())
                         .thenApply(List::size);
 
         return future.handle((count, err) ->
-            Optional.ofNullable(err)
-                    .map(e ->
-                            ControllerUtils.<Integer>failWithLogging(e,
-                                    "Error occurred during processing sequential upload", log)
-                    )
-                    .orElseGet(() -> ResponseEntity.ok(count))
+                Optional.ofNullable(err)
+                        .map(e ->
+                                ControllerUtils.<Integer>failWithLogging(e,
+                                        "Error occurred during processing sequential upload", log)
+                        )
+                        .orElseGet(() -> ResponseEntity.ok(count))
         ).get();
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.GET, path = "/sequential")
+    @RequestMapping(method = RequestMethod.GET, path = "/data/upload/sequential")
     public ResponseEntity<Integer> sequentialUpload() {
         try {
             return ResponseEntity.ok(
@@ -71,10 +72,11 @@ public class UploadControllerImpl implements UploadController {
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.GET, path = "/rx")
+    @RequestMapping(method = RequestMethod.GET, path = "/data/upload/rx")
     public Single<Integer> reactiveUpload() {
         return rxService.loadDataFromFile(Optional.empty())
                 .count()
                 .map(Long::intValue);
     }
 }
+

@@ -31,7 +31,7 @@ public class BeanCreator {
 
     //    @Bean
     public Cluster cluster(AppPropertyHolder properties) {
-        String node = "couch";
+        String node = "localhost";
 //        String node = properties.getCouchbase().getCluster().getNode();
         Cluster cluster = clusters.get(node);
         if (cluster == null) {

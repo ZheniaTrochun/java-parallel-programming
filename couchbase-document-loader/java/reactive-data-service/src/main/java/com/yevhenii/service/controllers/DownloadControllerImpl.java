@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 import java.util.Optional;
@@ -22,7 +23,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Slf4j
-@Controller("/data/download")
+@RestController
 public class DownloadControllerImpl implements DownloadController {
 
     private final SequentialService sequentialService;
@@ -41,7 +42,7 @@ public class DownloadControllerImpl implements DownloadController {
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.GET, path = "/completable-future/{page}")
+    @RequestMapping(method = RequestMethod.GET, path = "/data/download/completable-future/{page}")
     public ResponseEntity<List<DataObjectDto>> completableFutureRead(Integer page) throws ExecutionException, InterruptedException {
 
         return completableFutureService
@@ -62,7 +63,7 @@ public class DownloadControllerImpl implements DownloadController {
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.GET, path = "/sequential/{page}")
+    @RequestMapping(method = RequestMethod.GET, path = "/data/download/sequential/{page}")
     public ResponseEntity<List<DataObjectDto>> sequentialRead(Integer page) {
         return ResponseEntity.ok(
                 sequentialService.readPage(page).stream()
@@ -72,7 +73,7 @@ public class DownloadControllerImpl implements DownloadController {
     }
 
     @Override
-    @RequestMapping(method = RequestMethod.GET, path = "/rx/{page}")
+    @RequestMapping(method = RequestMethod.GET, path = "/data/download/rx/{page}")
     public Observable<DataObjectDto> reactiveRead(Integer page) {
         return rxService.readPage(page)
                 .map(dtoConverter::apply);

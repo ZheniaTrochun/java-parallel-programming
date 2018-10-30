@@ -62,7 +62,6 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
                         )
                         .collect(Collectors.toList());
 
-
         return FutureUtils.traverse(futureParts)
                 .thenApply(stream ->
                         stream.stream()
@@ -71,6 +70,7 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
                                 .peek(System.out::println)
                                 .reduce("", String::concat)
                 )
+                .thenApply(str -> str.replace("}{", "}\n{"))
                 .thenApply(this::splitIntoParts)
                 .thenApply(parts ->
                         parts.stream()
@@ -81,7 +81,8 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
                 .thenApply(streams ->
                         streams.stream()
                                 .map(List::stream)
-                                .flatMap(Function.identity()).collect(Collectors.toList()));
+                                .flatMap(Function.identity())
+                                .collect(Collectors.toList()));
 
     }
 
