@@ -49,7 +49,7 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
     public CompletableFuture<List<Document<DataObject>>> loadDataFromFile(Optional<String> filename) {
         File file = new File(filename.orElse(DEFAULT_FILE));
 
-        int partSize = (int) file.length() / PARALLELISM;
+        int partSize = (int) Math.ceil((double) file.length() / PARALLELISM);
 
         List<CompletableFuture<Pair<Integer, String>>> futureParts =
                 FutureUtils.iterateParallel(PARALLELISM, (i) -> Pair.of(i, FileUtils.readPart(file, i * partSize, partSize)))
@@ -67,7 +67,7 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
                         stream.stream()
                                 .sorted(Comparator.comparing(Pair::getLeft))
                                 .map(Pair::getRight)
-                                .peek(System.out::println)
+//                                .peek(System.out::println)
                                 .reduce("", String::concat)
                 )
                 .thenApply(str -> str.replace("}{", "}\n{"))
@@ -114,17 +114,22 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
 
 //    TODO rewrite
     private List<List<String>> splitIntoParts(String str) {
+
         List<String> splitted = Arrays.asList(str.split("\n"));
         System.out.println(str.chars().filter(c -> c == '\n').count());
         System.out.println(splitted.size());
         int partSize = splitted.size() / PARALLELISM;
         System.out.println(partSize);
+        System.out.println("last: " + splitted.get(splitted.size() - 1));
 
-        int partitionSize = 1000;
+//        int partitionSize = 1000;
         List<List<String>> partitions = new LinkedList<>();
-        for (int i = 0; i < splitted.size(); i += partitionSize) {
-            partitions.add(splitted.subList(i,
-                    Math.min(i + partitionSize, splitted.size())));
+//        for (int i = 0; i < splitted.size(); i += partitionSize) {
+//            partitions.add(splitted.subList(i,
+//                    Math.min(i + partitionSize, splitted.size())));
+//        }
+        for (int i = 0; i < splitted.size(); i += partSize) {
+            partitions.add(splitted.subList(i, Math.min(i + partSize, splitted.size())));
         }
 
         return partitions;
@@ -134,10 +139,11 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
         return CompletableFuture.supplyAsync(() -> strings.stream().map(str -> JsonUtils.readJson(str, DataObjectDto.class)).collect(Collectors.toList()))
                 .thenCompose(parsed ->
                         FutureUtils.getFutureListOrFail(parsed, () -> new JsonParseException("Failed to parse JSON")))
-                .thenApply(parsed -> parsed.stream().map(toDocumentConverter).map(dao::insert).collect(Collectors.toList()))
+//                .thenApply(parsed -> parsed.stream().map(toDocumentConverter).map(dao::insert).collect(Collectors.toList()))
+                .thenApply(parsed -> parsed.stream().map(toDocumentConverter).collect(Collectors.toList()))
                 .exceptionally(e -> {
                     System.out.println(e.getMessage());
-                    return null;
+                    return new ArrayList<>();
                 });
     }
 }

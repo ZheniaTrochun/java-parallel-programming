@@ -77,7 +77,9 @@ public class RxServiceImpl implements RxService {
                                         .map(dao::insert)
                                         .orElseThrow(() -> new JsonParseException("invalid json!"))
                         ).toFlowable(BackpressureStrategy.BUFFER)
-                ).doOnError(err -> log.error(err.getMessage()));
+                )
+                .doOnError(err -> log.error(err.getMessage()))
+                .doOnComplete(dao::closeCurrentBucket);
 
 
 //                .toFlowable()

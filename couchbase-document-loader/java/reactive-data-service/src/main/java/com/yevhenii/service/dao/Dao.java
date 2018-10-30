@@ -24,4 +24,8 @@ public interface Dao<K, E> {
     int getSize();
 
     int getPageSize();
+
+    boolean close();
+
+    boolean closeCurrentBucket();
 }

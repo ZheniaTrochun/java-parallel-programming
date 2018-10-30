@@ -19,4 +19,8 @@ public interface ReactiveDao<K, E> {
     Completable delete(K id);
 
     int getPageSize();
+
+    Observable<Boolean> close();
+
+    Observable<Boolean> closeCurrentBucket();
 }

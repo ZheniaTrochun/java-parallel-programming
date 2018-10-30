@@ -2,9 +2,6 @@ package com.yevhenii.service.configs;
 
 import com.couchbase.client.java.Cluster;
 import com.couchbase.client.java.CouchbaseCluster;
-import com.couchbase.client.java.cluster.ClusterManager;
-import com.couchbase.client.java.cluster.api.ClusterApiClient;
-import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.env.CouchbaseEnvironment;
 import com.couchbase.client.java.env.DefaultCouchbaseEnvironment;
 import com.yevhenii.service.converters.DataObjectToJsonDocumentConverter;
@@ -13,14 +10,11 @@ import com.yevhenii.service.converters.JsonObjectToDataObjectConverter;
 import com.yevhenii.service.dao.CouchbaseDao;
 import com.yevhenii.service.dao.ReactiveCouchbaseDao;
 import com.yevhenii.service.models.DataObject;
-import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 @Component
 public class BeanCreator {
@@ -60,8 +54,9 @@ public class BeanCreator {
     public CouchbaseDao<DataObject> dataObjectDao(AppPropertyHolder properties) {
         return new CouchbaseDao<>(
                 cluster(properties)
-                        .authenticate("admin", "admin123")
-                        .openBucket("DataObject"),
+                        .authenticate("admin", "admin123"),
+    "DataObject",
+//                        .openBucket("DataObject"),
 //                cluster(properties)
 //                        .authenticate(properties.getCouchbase().getCluster().getUsername(), properties.getCouchbase().getCluster().getPassword())
 //                        .openBucket(properties.getCouchbase().getBucket()),
@@ -75,8 +70,9 @@ public class BeanCreator {
     public ReactiveCouchbaseDao<DataObject> dataObjectReactiveDao(AppPropertyHolder properties) {
         return new ReactiveCouchbaseDao<>(
                 cluster(properties)
-                        .authenticate("admin", "admin123")
-                        .openBucket("DataObject").async(),
+                        .authenticate("admin", "admin123"),
+                "DataObject",
+//                        .openBucket("DataObject").async(),
 //                cluster(properties)
 //                        .authenticate(properties.getCouchbase().getCluster().getUsername(), properties.getCouchbase().getCluster().getUsername())
 //                        .openBucket(properties.getCouchbase().getBucket()).async(),

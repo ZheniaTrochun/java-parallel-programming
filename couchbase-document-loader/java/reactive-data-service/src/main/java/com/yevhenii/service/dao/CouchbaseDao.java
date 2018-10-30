@@ -3,6 +3,8 @@ package com.yevhenii.service.dao;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
+import com.couchbase.client.java.cluster.BucketSettings;
+import com.couchbase.client.java.cluster.DefaultBucketSettings;
 import com.couchbase.client.java.document.JsonDocument;
 import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.Delete;
@@ -18,6 +20,7 @@ import org.springframework.core.GenericTypeResolver;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.couchbase.client.java.query.Select.*;
@@ -29,12 +32,14 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
     private final Function<JsonDocument, Document<T>> toEntityConverter;
     private final Function<JsonObject, Document<T>> toEntityFromObjConverter;
 
-    private final Bucket bucket;
-    private final Class<T> genericClass;
+    private Bucket bucket;
+    private final String bucketName;
+    private final Cluster cluster;
     private final int PAGE_SIZE = 1000;
 
 //    @Autowired
-    public CouchbaseDao(Bucket bucket,
+    public CouchbaseDao(Cluster cluster,
+                        String bucketName,
                         Function<Document<T>, JsonDocument> toJsonDocumentConverter,
                         Function<JsonDocument, Document<T>> toEntityConverter,
                         Function<JsonObject, Document<T>> toEntityFromObjConverter) {
@@ -42,10 +47,9 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
         this.toJsonDocumentConverter = toJsonDocumentConverter;
         this.toEntityConverter = toEntityConverter;
         this.toEntityFromObjConverter = toEntityFromObjConverter;
-//        TODO check
-        this.genericClass = (Class<T>) GenericTypeResolver.resolveTypeArgument(getClass(), CouchbaseDao.class);
-//        Class entity = ((T)(new Object())).getClass();
-        this.bucket = bucket;
+        this.cluster = cluster;
+        this.bucket = cluster.openBucket(bucketName);
+        this.bucketName = bucketName;
     }
 
     @Override
@@ -127,10 +131,11 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
 
     @Override
     public boolean deleteAll() {
-        Statement statement = Delete.deleteFrom(bucket.name());
-
-        return bucket.query(statement)
-                .finalSuccess();
+        close();
+        cluster.clusterManager().removeBucket(bucketName);
+        cluster.clusterManager().insertBucket(DefaultBucketSettings.builder().name(bucketName).quota(500).build());
+        bucket = cluster.openBucket(bucketName);
+        return bucket.query(N1qlQuery.simple("create primary index on `" + bucket.name() + "`")).finalSuccess();
     }
 
     @Override
@@ -147,5 +152,26 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
     @Override
     public int getPageSize() {
         return PAGE_SIZE;
+    }
+
+    @Override
+    public boolean close() {
+        return bucket.close();
+    }
+
+    @Override
+    public boolean closeCurrentBucket() {
+        boolean res = bucket.close();
+        bucket = cluster.openBucket(bucketName);
+
+        return res;
+    }
+
+    private <R> R withBucket(Function<Bucket, R> function) {
+        Bucket bucket = cluster.openBucket(bucketName);
+        R result = function.apply(bucket);
+        bucket.close();
+
+        return result;
     }
 }

@@ -20,21 +20,24 @@ public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>>
 
     private final int PAGE_SIZE = 1000;
 
-    private final AsyncBucket bucket;
+    private AsyncBucket bucket;
+    private final Cluster cluster;
 
     private final Func1<Document<T>, JsonDocument> toJsonDocumentConverter;
     private final Func1<JsonDocument, Document<T>> toEntityConverter;
     private final Func1<JsonObject, Document<T>> toEntityFromObjConverter;
 
-    public ReactiveCouchbaseDao(AsyncBucket bucket,
+    public ReactiveCouchbaseDao(Cluster cluster,
+                                String bucketName,
                                 Function<Document<T>, JsonDocument> toJsonDocumentConverter,
                                 Function<JsonDocument, Document<T>> toEntityConverter,
                                 Function<JsonObject, Document<T>> toEntityFromObjConverter) {
 
+        this.cluster = cluster;
         this.toJsonDocumentConverter = toJsonDocumentConverter::apply;
         this.toEntityConverter = toEntityConverter::apply;
         this.toEntityFromObjConverter = toEntityFromObjConverter::apply;
-        this.bucket = bucket;
+        this.bucket = cluster.openBucket(bucketName).async();
     }
 
     @Override
@@ -112,5 +115,17 @@ public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>>
     @Override
     public int getPageSize() {
         return PAGE_SIZE;
+    }
+
+    @Override
+    public Observable<Boolean> close() {
+        return RxJavaInterop.toV2Observable(bucket.close());
+    }
+
+    @Override
+    public Observable<Boolean> closeCurrentBucket() {
+        Observable<Boolean> res = RxJavaInterop.toV2Observable(bucket.close());
+        res.subscribe(r -> this.bucket = cluster.openBucket().async());
+        return res;
     }
 }
