@@ -5,6 +5,9 @@ services:
     image: couch:latest
     build:
       context: ./couchbase
+    ports:
+      - "8091-8094:8091-8094"
+      - "11210:11210"
     networks:
       - doc-loader
 

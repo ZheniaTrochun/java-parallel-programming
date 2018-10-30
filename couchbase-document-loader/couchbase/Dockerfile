@@ -1,4 +1,4 @@
-FROM couchbase/server:latest
+FROM couchbase:latest
 
 COPY init.sh /opt/couchbase
 
