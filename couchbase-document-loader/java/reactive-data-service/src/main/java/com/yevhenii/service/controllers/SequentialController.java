@@ -10,11 +10,7 @@ import java.util.List;
 
 public interface SequentialController {
 
-    ResponseEntity<Integer> load();
-
     ResponseEntity<ProfilingResult<Integer>> loadProfiled();
-
-    ResponseEntity<List<DataObjectDto>> read(Integer page);
 
     ResponseEntity<ProfilingResult<List<DataObjectDto>>> readProfiled(Integer page);
 }

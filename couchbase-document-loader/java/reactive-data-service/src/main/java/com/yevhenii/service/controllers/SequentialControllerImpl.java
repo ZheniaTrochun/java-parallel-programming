@@ -33,19 +33,6 @@ public class SequentialControllerImpl implements SequentialController {
     }
 
     @Override
-    @RequestMapping(path = "/data/upload/sequential")
-    public ResponseEntity<Integer> load() {
-        try {
-            return ResponseEntity.ok(
-                    service.loadDataFromFile(Optional.empty()).size()
-            );
-        } catch (IOException e) {
-            e.printStackTrace();
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
-    }
-
-    @Override
     @RequestMapping(path = "/data/upload/debug/sequential")
     public ResponseEntity<ProfilingResult<Integer>> loadProfiled() {
 
@@ -61,17 +48,17 @@ public class SequentialControllerImpl implements SequentialController {
         return ResponseEntity.ok(profiled);
     }
 
-    @Override
-    @Async
-    @RequestMapping(path = "/data/download/sequential/{page}")
-    public ResponseEntity<List<DataObjectDto>> read(@PathVariable Integer page) {
-
-        return ResponseEntity.ok(
-                service.readPage(page).stream()
-                        .map(toDtoConverter)
-                        .collect(Collectors.toList())
-        );
-    }
+//    @Override
+//    @Async
+//    @RequestMapping(path = "/data/download/sequential/{page}")
+//    public ResponseEntity<List<DataObjectDto>> read(@PathVariable Integer page) {
+//
+//        return ResponseEntity.ok(
+//                service.readPage(page).stream()
+//                        .map(toDtoConverter)
+//                        .collect(Collectors.toList())
+//        );
+//    }
 
     @Override
     @RequestMapping(path = "/data/download/debug/sequential/{page}")

@@ -11,11 +11,7 @@ import java.util.concurrent.ExecutionException;
 
 public interface CompletableFutureController {
 
-    ResponseEntity<Integer> load() throws ExecutionException, InterruptedException;
-
     DeferredResult<ResponseEntity<ProfilingResult<Integer>>> loadProfiled();
-
-    Callable<ResponseEntity<List<DataObjectDto>>> read(Integer page);
 
     Callable<ResponseEntity<ProfilingResult<List<DataObjectDto>>>> readProfiled(Integer page);
 }

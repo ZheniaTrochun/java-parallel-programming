@@ -6,7 +6,4 @@ import io.reactivex.Single;
 
 public interface RxController {
 
-    Single<Integer> load();
-
-    Observable<DataObjectDto> read(Integer page);
 }

@@ -36,27 +36,27 @@ public class CompletableFutureControllerImpl implements CompletableFutureControl
         this.converter = converter;
     }
 
-    @Override
-    @RequestMapping(path = "/data/upload/completablefuture")
-    public ResponseEntity<Integer> load() throws ExecutionException, InterruptedException {
-
-        CompletableFuture<Integer> future = new CompletableFuture<>();
-
-        service.loadDataFromFile(Optional.empty())
-                .thenApply(list -> list.stream().peek(System.out::println).collect(Collectors.toList()))
-                .thenApply(List::size).whenComplete((count, err) -> {
-            System.out.println("count = " + count);
-            System.out.println("error = " + err);
-            future.complete(count);
-        });
-
-
-//        System.out.println("result = " + res);
-        System.out.println("test123123123");
-        return ResponseEntity.ok(
-                        future.get()
-                );
-    }
+//    @Override
+//    @RequestMapping(path = "/data/upload/completablefuture")
+//    public ResponseEntity<Integer> load() throws ExecutionException, InterruptedException {
+//
+//        CompletableFuture<Integer> future = new CompletableFuture<>();
+//
+//        service.loadDataFromFile(Optional.empty())
+//                .thenApply(list -> list.stream().peek(System.out::println).collect(Collectors.toList()))
+//                .thenApply(List::size).whenComplete((count, err) -> {
+//            System.out.println("count = " + count);
+//            System.out.println("error = " + err);
+//            future.complete(count);
+//        });
+//
+//
+////        System.out.println("result = " + res);
+//        System.out.println("test123123123");
+//        return ResponseEntity.ok(
+//                        future.get()
+//                );
+//    }
 
 //    TODO rewrite cardinally
     @Override
@@ -90,20 +90,20 @@ public class CompletableFutureControllerImpl implements CompletableFutureControl
         return output;
     }
 
-    @Override
-    @RequestMapping(path = "/data/download/completablefuture/{page}")
-    public Callable<ResponseEntity<List<DataObjectDto>>> read(Integer page) {
-        return () ->
-                ResponseEntity.ok(
-                        service.readPage(page)
-                                .thenApply(list ->
-                                        list.stream()
-                                                .map(converter)
-                                                .collect(Collectors.toList())
-                                )
-                                .join()
-                );
-    }
+//    @Override
+//    @RequestMapping(path = "/data/download/completablefuture/{page}")
+//    public Callable<ResponseEntity<List<DataObjectDto>>> read(Integer page) {
+//        return () ->
+//                ResponseEntity.ok(
+//                        service.readPage(page)
+//                                .thenApply(list ->
+//                                        list.stream()
+//                                                .map(converter)
+//                                                .collect(Collectors.toList())
+//                                )
+//                                .join()
+//                );
+//    }
 
     @Override
     @RequestMapping(path = "/data/download/debug/completablefuture/{page}")

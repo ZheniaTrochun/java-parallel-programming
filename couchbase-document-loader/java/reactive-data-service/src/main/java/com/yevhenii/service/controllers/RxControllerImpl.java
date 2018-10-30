@@ -23,19 +23,11 @@ public class RxControllerImpl implements RxController {
         this.toDtoConverter = toDtoConverter;
     }
 
-    @Override
-    @RequestMapping(path = "/data/upload/rx")
-    public Single<Integer> load() {
-        return service.loadDataFromFile(Optional.empty())
-                .count()
-                .map(Long::intValue);
-    }
-
-    @Override
-    @RequestMapping(path = "/data/download/rx/{page}")
-    public Observable<DataObjectDto> read(Integer page) {
-
-        return service.readPage(page)
-                .map(toDtoConverter::apply);
-    }
+//    @Override
+//    @RequestMapping(path = "/data/download/rx/{page}")
+//    public Observable<DataObjectDto> read(Integer page) {
+//
+//        return service.readPage(page)
+//                .map(toDtoConverter::apply);
+//    }
 }
