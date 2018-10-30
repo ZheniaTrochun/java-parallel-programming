@@ -10,7 +10,7 @@ echo "cool"
 sleep 50
 
 
-couchbase-cli cluster-init --cluster-username local --cluster-password localpass
+couchbase-cli cluster-init --cluster-username local --cluster-password localpass --services=data,index,query,fts
 sleep 5
 
 couchbase-cli user-manage -c 0.0.0.0:8091 --username local --password localpass --set --rbac-username admin --rbac-password admin123 --auth-domain local --roles admin
