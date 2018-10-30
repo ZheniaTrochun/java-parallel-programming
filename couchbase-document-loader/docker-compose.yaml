@@ -19,17 +19,17 @@ services:
       - "8080:8080"
     depends_on:
       - couch
-      - generation-tool
+      # - generation-tool
     restart: on-failure
     networks:
       - doc-loader
 
-  generation-tool:
-    image: generation-tool:latest
-    build:
-      context: ./tools
-    volumes:
-      - /root/java-parallel-programming/couchbase-document-loader/java/reactive-data-service:/app/generated
+  # generation-tool:
+  #   image: generation-tool:latest
+  #   build:
+  #     context: ./tools
+  #   volumes:
+  #     - /root/java-parallel-programming/couchbase-document-loader/java/reactive-data-service:/app/generated
 
 networks:
   doc-loader:
