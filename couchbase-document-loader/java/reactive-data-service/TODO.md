@@ -6,5 +6,5 @@
 6. ~~refactor dao~~
 7. move to other data object
 8. ~~remove unused dependencies~~
-9. remove unused code
+9. ~~remove unused code~~
 10. move from spring boot to new spring in new branch

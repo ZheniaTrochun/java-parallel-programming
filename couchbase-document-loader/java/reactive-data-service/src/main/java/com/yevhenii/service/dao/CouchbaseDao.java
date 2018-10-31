@@ -99,15 +99,17 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
 
     @Override
     public boolean deleteAll() {
-        close();
+//        close();
 
-        cluster.clusterManager().removeBucket(bucketName);
-        cluster.clusterManager().insertBucket(DefaultBucketSettings.builder().name(bucketName).quota(500).build());
-        bucket = cluster.openBucket(bucketName);
+//        cluster.clusterManager().removeBucket(bucketName);
+//        cluster.clusterManager().insertBucket(DefaultBucketSettings.builder().name(bucketName).quota(500).build());
+//        bucket = cluster.openBucket(bucketName);
 
-        return bucket.query(
-                N1qlQuery.simple(String.format(Queries.CREATE_INDEX, bucketName))
-        ).finalSuccess();
+//        return bucket.query(
+//                N1qlQuery.simple(String.format(Queries.CREATE_INDEX, bucketName))
+//        ).finalSuccess();
+
+        return bucket.query(N1qlQuery.simple("DELETE FROM `" + bucketName + "`")).finalSuccess();
     }
 
     @Override

@@ -20,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -93,21 +94,30 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
     }
 
     private <T> CompletableFuture<List<T>> traverse(List<CompletableFuture<T>> futures) {
-        CompletableFuture<List<T>> traversed = CompletableFuture.supplyAsync(LinkedList::new);
+        return traverseLoop(futures, CompletableFuture.completedFuture(new ArrayList<>()));
+    }
 
-        for (CompletableFuture<T> future : futures) {
-            traversed.thenApplyAsync(list -> future.thenApply(list::add));
+    private static <T> CompletableFuture<List<T>> traverseLoop(List<CompletableFuture<T>> futureList,
+                                                               CompletableFuture<List<T>> current) {
+        Optional<CompletableFuture<T>> head = futureList.stream().findFirst();
+        if (!head.isPresent()) {
+            return current;
         }
-
-        return traversed;
+        CompletableFuture<T> future = head.get();
+        return traverseLoop(
+                futureList.stream().skip(1).collect(Collectors.toList()),
+                current.thenComposeAsync(stream -> future.thenApplyAsync(curr -> Stream.concat(stream.stream(), Stream.of(curr)).collect(Collectors.toList())))
+        );
     }
 
 //    todo dangerous part
     private String collect(List<String> parts) {
-        return parts.stream()
+        String str = parts.stream()
                 .map(StringBuffer::new)
-                .reduce(new StringBuffer(), (left, right) -> right.append(left))
+                .reduce(new StringBuffer(), (left, right) -> left.append(right))
                 .toString();
+
+        return str;
     }
 
     private <T> List<T> flatten(List<List<T>> lists) {
@@ -137,6 +147,8 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
     }
 
     private CompletableFuture<List<List<Document<DataObject>>>> deserializeAndSave(List<List<String>> jsons) {
+        log.info("Deserialize and save: " + jsons.size());
+
         return traverse(
                 jsons.stream()
                         .map(this::writePart)
@@ -145,6 +157,7 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
     }
 
     private CompletableFuture<List<Document<DataObject>>> writePart(List<String> jsons) {
+
         return CompletableFuture.supplyAsync(() -> deserialize(jsons))
                 .thenCompose(parsed ->
                         FutureUtils.getFutureListOrFail(parsed, () -> new JsonParseException("Failed to parse JSON")))
@@ -158,11 +171,12 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
     private List<Document<DataObject>> convertAndSave(List<DataObjectDto> objects) {
         return objects.stream()
                 .map(toDocumentConverter)
-                .map(dao::insert)
+//                .map(dao::insert)
                 .collect(Collectors.toList());
     }
 
     private List<Optional<DataObjectDto>> deserialize(List<String> jsons) {
+        log.info("Deserialize: " + jsons.size());
         return jsons.stream()
                 .map(str -> JsonUtils.readJson(str, DataObjectDto.class))
                 .collect(Collectors.toList());
