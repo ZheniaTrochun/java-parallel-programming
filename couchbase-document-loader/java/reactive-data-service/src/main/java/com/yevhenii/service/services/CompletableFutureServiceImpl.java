@@ -171,7 +171,7 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
     private List<Document<DataObject>> convertAndSave(List<DataObjectDto> objects) {
         return objects.stream()
                 .map(toDocumentConverter)
-//                .map(dao::insert)
+                .map(dao::insert)
                 .collect(Collectors.toList());
     }
 

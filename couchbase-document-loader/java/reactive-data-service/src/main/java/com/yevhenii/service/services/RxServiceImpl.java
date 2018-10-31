@@ -51,7 +51,7 @@ public class RxServiceImpl implements RxService {
         return readFileParallel()
                 .toFlowable()
                 .map(Utils::splitByLines)
-                .flatMap(this::divideIntoParts)
+                .concatMap(this::divideIntoParts)
                 .flatMap(part ->
                         part.flatMap(str -> deserializeAndSave(str).toObservable())
                                 .toFlowable(BackpressureStrategy.BUFFER)
