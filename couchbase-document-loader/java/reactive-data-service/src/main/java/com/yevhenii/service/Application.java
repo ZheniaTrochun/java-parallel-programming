@@ -13,28 +13,32 @@ import org.springframework.web.server.adapter.WebHttpHandlerBuilder;
 import reactor.ipc.netty.NettyContext;
 import reactor.ipc.netty.http.server.HttpServer;
 
-@EnableWebFlux
-@Configuration
-@ComponentScan
-@EnableAutoConfiguration
+//@EnableWebFlux
+//@Configuration
+//@ComponentScan
+//@EnableAutoConfiguration
+@SpringBootApplication
 public class Application {
 
     private final static String SERVER_HOST = "localhost";
     private final static int SERVER_PORT = 8080;
 
-    public static void main(String[] args) throws Exception {
-        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Application.class)) {
-            context.getBean(NettyContext.class).onClose().block();
-        }
+    public static void main(String[] args) {
+        SpringApplication.run(Application.class, args);
     }
-
-    @Profile("default")
-    @Bean
-    public NettyContext nettyContext(ApplicationContext context) {
-        HttpHandler handler = WebHttpHandlerBuilder.applicationContext(context).build();
-        ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(handler);
-        HttpServer httpServer = HttpServer.create(SERVER_HOST, SERVER_PORT);
-
-        return httpServer.newHandler(adapter).block();
-    }
+//    public static void main(String[] args) throws Exception {
+//        try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext(Application.class)) {
+//            context.getBean(NettyContext.class).onClose().block();
+//        }
+//    }
+//
+//    @Profile("default")
+//    @Bean
+//    public NettyContext nettyContext(ApplicationContext context) {
+//        HttpHandler handler = WebHttpHandlerBuilder.applicationContext(context).build();
+//        ReactorHttpHandlerAdapter adapter = new ReactorHttpHandlerAdapter(handler);
+//        HttpServer httpServer = HttpServer.create(SERVER_HOST, SERVER_PORT);
+//
+//        return httpServer.newHandler(adapter).block();
+//    }
 }

@@ -3,60 +3,45 @@ package com.yevhenii.service.dao;
 import com.couchbase.client.core.CouchbaseException;
 import com.couchbase.client.java.Bucket;
 import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.cluster.BucketSettings;
 import com.couchbase.client.java.cluster.DefaultBucketSettings;
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonObject;
-import com.couchbase.client.java.query.Delete;
 import com.couchbase.client.java.query.N1qlQuery;
 import com.couchbase.client.java.query.N1qlQueryRow;
 import com.couchbase.client.java.query.Statement;
-import com.yevhenii.service.converters.DataObjectToJsonDocumentConverter;
-import com.yevhenii.service.converters.JsonDocumentToDataObjectConverter;
-import com.yevhenii.service.converters.JsonObjectToDataObjectConverter;
 import com.yevhenii.service.models.Document;
-import org.springframework.core.GenericTypeResolver;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static com.couchbase.client.java.query.Select.*;
 
-//@Component
-public class CouchbaseDao<T> implements Dao<String, Document<T>> {
 
-    private final Function<Document<T>, JsonDocument> toJsonDocumentConverter;
-    private final Function<JsonDocument, Document<T>> toEntityConverter;
-    private final Function<JsonObject, Document<T>> toEntityFromObjConverter;
+public class CouchbaseDao<T> implements Dao<String, Document<T>> {
 
     private Bucket bucket;
     private final String bucketName;
     private final Cluster cluster;
     private final int PAGE_SIZE = 1000;
 
+    private final Class<T> clazz;
+
 //    @Autowired
     public CouchbaseDao(Cluster cluster,
                         String bucketName,
-                        Function<Document<T>, JsonDocument> toJsonDocumentConverter,
-                        Function<JsonDocument, Document<T>> toEntityConverter,
-                        Function<JsonObject, Document<T>> toEntityFromObjConverter) {
+                        Class<T> clazz) {
 
-        this.toJsonDocumentConverter = toJsonDocumentConverter;
-        this.toEntityConverter = toEntityConverter;
-        this.toEntityFromObjConverter = toEntityFromObjConverter;
         this.cluster = cluster;
         this.bucket = cluster.openBucket(bucketName);
         this.bucketName = bucketName;
+        this.clazz = clazz;
     }
 
     @Override
     public Optional<Document<T>> findById(String id) {
 
         return Optional.ofNullable(bucket.get(id))
-                .map(toEntityConverter);
+                .map(doc -> Document.read(doc, clazz));
     }
 
 //    todo think about maps
@@ -78,7 +63,7 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
                 .allRows()
                 .stream()
                 .map(N1qlQueryRow::value)
-                .map(toEntityFromObjConverter)
+                .map(obj -> Document.read(obj, clazz))
                 .collect(Collectors.toList());
 
     }
@@ -101,21 +86,23 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
                 .allRows()
                 .stream()
                 .map(N1qlQueryRow::value)
-                .map(toEntityFromObjConverter)
+                .map(obj -> Document.read(obj, clazz))
                 .collect(Collectors.toList());
     }
 
     @Override
     public Document<T> insert(Document<T> entity) {
-        return toEntityConverter.apply(
-                bucket.insert(toJsonDocumentConverter.apply(entity))
+        return Document.read(
+                bucket.insert(entity.toJsonDocument()),
+                clazz
         );
     }
 
     @Override
     public Document<T> update(Document<T> entity) {
-        return toEntityConverter.apply(
-                bucket.replace(toJsonDocumentConverter.apply(entity))
+        return Document.read(
+                bucket.replace(entity.toJsonDocument()),
+                clazz
         );
     }
 

@@ -2,8 +2,7 @@ package com.yevhenii.service.services;
 
 import com.google.gson.JsonParseException;
 import com.yevhenii.service.configs.AppPropertyHolder;
-import com.yevhenii.service.converters.DocumentToDtoConverter;
-import com.yevhenii.service.converters.DtoToDocumentConverter;
+import com.yevhenii.service.converters.Converters;
 import com.yevhenii.service.dao.CouchbaseDao;
 import com.yevhenii.service.models.DataObject;
 import com.yevhenii.service.models.Document;
@@ -31,14 +30,12 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
 
     private final CouchbaseDao<DataObject> dao;
 
-    private final DtoToDocumentConverter toDocumentConverter;
+    private final Function<DataObjectDto, Document<DataObject>> toDocumentConverter = Converters.dtoToDocumentConverter;
 
     @Autowired
     public CompletableFutureServiceImpl(CouchbaseDao<DataObject> dao,
-                                        DtoToDocumentConverter toDocumentConverter,
                                         AppPropertyHolder properties) {
         this.dao = dao;
-        this.toDocumentConverter = toDocumentConverter;
         this.DEFAULT_FILE = "data.txt";
 //        this.DEFAULT_FILE = properties.getDatafile();
         this.PARALLELISM = 10;

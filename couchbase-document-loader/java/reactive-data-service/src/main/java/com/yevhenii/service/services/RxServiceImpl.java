@@ -2,7 +2,7 @@ package com.yevhenii.service.services;
 
 import com.google.gson.JsonParseException;
 import com.yevhenii.service.configs.AppPropertyHolder;
-import com.yevhenii.service.converters.DtoToDocumentConverter;
+import com.yevhenii.service.converters.Converters;
 import com.yevhenii.service.dao.ReactiveCouchbaseDao;
 import com.yevhenii.service.models.DataObject;
 import com.yevhenii.service.models.Document;
@@ -29,14 +29,12 @@ public class RxServiceImpl implements RxService {
     private final int PARALLELISM;
 
     private final ReactiveCouchbaseDao<DataObject> dao;
-    private final Function<DataObjectDto, Document<DataObject>> toDocumentConverter;
+    private final Function<DataObjectDto, Document<DataObject>> toDocumentConverter = Converters.dtoToDocumentConverter;
 
     @Autowired
     public RxServiceImpl(ReactiveCouchbaseDao<DataObject> dao,
-                         DtoToDocumentConverter toDocumentConverter,
                          AppPropertyHolder properties) {
         this.dao = dao;
-        this.toDocumentConverter = toDocumentConverter;
         this.DEFAULT_FILE = "data.txt";
 //        this.DEFAULT_FILE = properties.getDatafile();
         this.PARALLELISM = 10;

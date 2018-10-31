@@ -22,29 +22,22 @@ public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>>
 
     private AsyncBucket bucket;
     private final Cluster cluster;
-
-    private final Func1<Document<T>, JsonDocument> toJsonDocumentConverter;
-    private final Func1<JsonDocument, Document<T>> toEntityConverter;
-    private final Func1<JsonObject, Document<T>> toEntityFromObjConverter;
+    private final Class<T> clazz;
 
     public ReactiveCouchbaseDao(Cluster cluster,
                                 String bucketName,
-                                Function<Document<T>, JsonDocument> toJsonDocumentConverter,
-                                Function<JsonDocument, Document<T>> toEntityConverter,
-                                Function<JsonObject, Document<T>> toEntityFromObjConverter) {
+                                Class<T> clazz) {
 
         this.cluster = cluster;
-        this.toJsonDocumentConverter = toJsonDocumentConverter::apply;
-        this.toEntityConverter = toEntityConverter::apply;
-        this.toEntityFromObjConverter = toEntityFromObjConverter::apply;
         this.bucket = cluster.openBucket(bucketName).async();
+        this.clazz = clazz;
     }
 
     @Override
     public Maybe<Document<T>> findById(String id) {
         return RxJavaInterop.toV2Maybe(
                 bucket.get(id)
-                .map(toEntityConverter)
+                .map(doc -> Document.read(doc, clazz))
                 .toSingle()
         );
 
@@ -60,7 +53,7 @@ public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>>
                 bucket.query(select)
                         .flatMap(AsyncN1qlQueryResult::rows)
                         .map(AsyncN1qlQueryRow::value)
-                        .map(toEntityFromObjConverter)
+                        .map(obj -> Document.read(obj, clazz))
         );
     }
 
@@ -82,15 +75,15 @@ public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>>
                 bucket.query(select)
                         .flatMap(AsyncN1qlQueryResult::rows)
                         .map(AsyncN1qlQueryRow::value)
-                        .map(toEntityFromObjConverter)
+                        .map(obj -> Document.read(obj, clazz))
         );
     }
 
     @Override
     public Single<Document<T>> insert(Document<T> entity) {
         return RxJavaInterop.toV2Single(
-                bucket.insert(toJsonDocumentConverter.call(entity))
-                        .map(toEntityConverter)
+                bucket.insert(entity.toJsonDocument())
+                        .map(doc -> Document.read(doc, clazz))
                         .toSingle()
         );
     }
@@ -98,8 +91,8 @@ public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>>
     @Override
     public Single<Document<T>> update(Document<T> entity) {
         return RxJavaInterop.toV2Single(
-                bucket.replace(toJsonDocumentConverter.call(entity))
-                        .map(toEntityConverter)
+                bucket.replace(entity.toJsonDocument())
+                        .map(doc -> Document.read(doc, clazz))
                         .toSingle()
         );
     }

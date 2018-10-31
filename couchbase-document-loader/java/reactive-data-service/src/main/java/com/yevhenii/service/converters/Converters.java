@@ -20,10 +20,10 @@ public class Converters {
                     .randomNumber(doc.getContent().getSecretNum())
                     .build();
 
-    public static final Function<Document<DataObject>, JsonDocument> toJsonDocumentConverter = doc ->
-            JsonDocument.create(
-                    doc.getId(),
-                    JsonObject.fromJson(JsonUtils.toJson(doc.getContent())),
-                    doc.getVersion()
+    public static final Function<DataObjectDto, Document<DataObject>> dtoToDocumentConverter = dto ->
+            new Document<>(
+                    dto.getId().toString(),
+                    new DataObject(dto.getName(), dto.getAge(), dto.getRandomString(), dto.getRandomNumber()),
+                    1L
             );
 }

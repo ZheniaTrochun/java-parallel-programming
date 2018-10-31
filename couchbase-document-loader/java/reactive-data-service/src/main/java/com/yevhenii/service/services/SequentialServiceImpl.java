@@ -1,8 +1,7 @@
 package com.yevhenii.service.services;
 
 import com.yevhenii.service.configs.AppPropertyHolder;
-import com.yevhenii.service.converters.DocumentToDtoConverter;
-import com.yevhenii.service.converters.DtoToDocumentConverter;
+import com.yevhenii.service.converters.Converters;
 import com.yevhenii.service.dao.CouchbaseDao;
 import com.yevhenii.service.models.DataObject;
 import com.yevhenii.service.models.Document;
@@ -18,6 +17,7 @@ import java.io.File;
 
 import java.io.IOException;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,14 +26,12 @@ public class SequentialServiceImpl implements SequentialService {
     private final String DEFAULT_FILE;
 
     private final CouchbaseDao<DataObject> dao;
-    private final DtoToDocumentConverter toDocumentConverter;
+    private final Function<DataObjectDto, Document<DataObject>> toDocumentConverter = Converters.dtoToDocumentConverter;
 
     @Autowired
     public SequentialServiceImpl(CouchbaseDao<DataObject> dao,
-                                 DtoToDocumentConverter toDocumentConverter,
                                  AppPropertyHolder properties) {
         this.dao = dao;
-        this.toDocumentConverter = toDocumentConverter;
         this.DEFAULT_FILE = "data.txt";
     }
 

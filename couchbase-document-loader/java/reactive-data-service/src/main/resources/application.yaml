@@ -1,13 +1,14 @@
 application:
   couchbase:
     cluster:
-      url: "http://localhost:8091"
+      url: "http://couch:8091"
       username: "admin"
       password: "admin123"
-      node: "localhost"
+      node: "couch"
     bucket: "DataObject"
     timeout: 10000
     kvTimeout: 3000
+    bufferSize: 131072
   parallelism: 10
-  datafile: "C:\\Users\\Yevhenii\\IdeaProjects\\kpi\\java-parallel-programming\\lab-2-new\\lab1\\tools\\data.txt"
+  datafile: "data.txt"
   pageSize: 1000
