@@ -12,7 +12,9 @@ import com.yevhenii.service.utils.FileUtils;
 import com.yevhenii.service.utils.FutureUtils;
 import com.yevhenii.service.utils.JsonUtils;
 import com.yevhenii.service.utils.Pair;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -22,7 +24,9 @@ import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@EnableConfigurationProperties(AppPropertyHolder.class)
 public class CompletableFutureServiceImpl implements CompletableFutureService {
 
     private final String DEFAULT_FILE;
@@ -36,10 +40,8 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
     public CompletableFutureServiceImpl(CouchbaseDao<DataObject> dao,
                                         AppPropertyHolder properties) {
         this.dao = dao;
-        this.DEFAULT_FILE = "data.txt";
-//        this.DEFAULT_FILE = properties.getDatafile();
-        this.PARALLELISM = 10;
-//        this.PARALLELISM = properties.getParallelism();
+        this.DEFAULT_FILE = properties.getDatafile();
+        this.PARALLELISM = properties.getParallelism();
     }
 
     @Override
@@ -64,7 +66,6 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
                         stream.stream()
                                 .sorted(Comparator.comparing(Pair::getLeft))
                                 .map(Pair::getRight)
-//                                .peek(System.out::println)
                                 .reduce("", String::concat)
                 )
                 .thenApply(str -> str.replace("}{", "}\n{"))
@@ -119,12 +120,8 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
         System.out.println(partSize);
         System.out.println("last: " + splitted.get(splitted.size() - 1));
 
-//        int partitionSize = 1000;
         List<List<String>> partitions = new LinkedList<>();
-//        for (int i = 0; i < splitted.size(); i += partitionSize) {
-//            partitions.add(splitted.subList(i,
-//                    Math.min(i + partitionSize, splitted.size())));
-//        }
+
         for (int i = 0; i < splitted.size(); i += partSize) {
             partitions.add(splitted.subList(i, Math.min(i + partSize, splitted.size())));
         }
@@ -136,8 +133,8 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
         return CompletableFuture.supplyAsync(() -> strings.stream().map(str -> JsonUtils.readJson(str, DataObjectDto.class)).collect(Collectors.toList()))
                 .thenCompose(parsed ->
                         FutureUtils.getFutureListOrFail(parsed, () -> new JsonParseException("Failed to parse JSON")))
-//                .thenApply(parsed -> parsed.stream().map(toDocumentConverter).map(dao::insert).collect(Collectors.toList()))
-                .thenApply(parsed -> parsed.stream().map(toDocumentConverter).collect(Collectors.toList()))
+                .thenApply(parsed -> parsed.stream().map(toDocumentConverter).map(dao::insert).collect(Collectors.toList()))
+//                .thenApply(parsed -> parsed.stream().map(toDocumentConverter).collect(Collectors.toList()))
                 .exceptionally(e -> {
                     System.out.println(e.getMessage());
                     return new ArrayList<>();

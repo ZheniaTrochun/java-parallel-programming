@@ -18,19 +18,17 @@ import static com.couchbase.client.java.query.Select.select;
 
 public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>> {
 
-    private final int PAGE_SIZE = 1000;
+    private final int PAGE_SIZE;
 
     private AsyncBucket bucket;
     private final Cluster cluster;
     private final Class<T> clazz;
 
-    public ReactiveCouchbaseDao(Cluster cluster,
-                                String bucketName,
-                                Class<T> clazz) {
-
+    public ReactiveCouchbaseDao(Cluster cluster, String bucketName, int pageSize, Class<T> clazz) {
         this.cluster = cluster;
         this.bucket = cluster.openBucket(bucketName).async();
         this.clazz = clazz;
+        PAGE_SIZE = pageSize;
     }
 
     @Override

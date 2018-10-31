@@ -20,7 +20,9 @@ public class AdministrationControllerImpl implements AdministrationController {
     @Override
     @RequestMapping("/admin/clear-bucket")
     public ResponseEntity<Void> deleteAllRecords() {
-        return service.deleteAll() ? ResponseEntity.ok().build() : ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        return service.deleteAll() ?
+                ResponseEntity.ok().build() :
+                ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
     }
 
     @Override

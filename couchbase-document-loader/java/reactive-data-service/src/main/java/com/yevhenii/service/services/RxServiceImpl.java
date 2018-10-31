@@ -13,6 +13,7 @@ import com.yevhenii.service.utils.RxUtils;
 import io.reactivex.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -21,8 +22,9 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@Service
 @Slf4j
+@Service
+@EnableConfigurationProperties(AppPropertyHolder.class)
 public class RxServiceImpl implements RxService {
 
     private final String DEFAULT_FILE;
@@ -35,10 +37,8 @@ public class RxServiceImpl implements RxService {
     public RxServiceImpl(ReactiveCouchbaseDao<DataObject> dao,
                          AppPropertyHolder properties) {
         this.dao = dao;
-        this.DEFAULT_FILE = "data.txt";
-//        this.DEFAULT_FILE = properties.getDatafile();
-        this.PARALLELISM = 10;
-//        this.PARALLELISM = properties.getParallelism();
+        this.DEFAULT_FILE = properties.getDatafile();
+        this.PARALLELISM = properties.getParallelism();
     }
 
     //  TODO think about this

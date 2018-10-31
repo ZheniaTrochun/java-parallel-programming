@@ -12,3 +12,13 @@ application:
   parallelism: 10
   datafile: "data.txt"
   pageSize: 1000
+
+
+logging:
+  level:
+    org.springframework: INFO
+    com.yevhenii.service: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+  file: logs/application.log

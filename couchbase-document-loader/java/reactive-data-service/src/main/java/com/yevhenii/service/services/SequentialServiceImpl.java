@@ -10,7 +10,9 @@ import com.yevhenii.service.profiling.Profilers;
 import com.yevhenii.service.utils.FileUtils;
 import com.yevhenii.service.utils.JsonUtils;
 import com.yevhenii.service.utils.Pair;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
@@ -20,7 +22,9 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+@Slf4j
 @Service
+@EnableConfigurationProperties(AppPropertyHolder.class)
 public class SequentialServiceImpl implements SequentialService {
 
     private final String DEFAULT_FILE;
@@ -32,7 +36,7 @@ public class SequentialServiceImpl implements SequentialService {
     public SequentialServiceImpl(CouchbaseDao<DataObject> dao,
                                  AppPropertyHolder properties) {
         this.dao = dao;
-        this.DEFAULT_FILE = "data.txt";
+        this.DEFAULT_FILE = properties.getDatafile();
     }
 
 //    TODO rewrite
