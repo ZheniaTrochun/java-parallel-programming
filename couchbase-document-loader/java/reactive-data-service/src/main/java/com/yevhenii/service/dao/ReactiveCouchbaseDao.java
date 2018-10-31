@@ -2,25 +2,20 @@ package com.yevhenii.service.dao;
 
 import com.couchbase.client.java.AsyncBucket;
 import com.couchbase.client.java.Cluster;
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonObject;
 import com.couchbase.client.java.query.AsyncN1qlQueryResult;
 import com.couchbase.client.java.query.AsyncN1qlQueryRow;
 import com.couchbase.client.java.query.Statement;
 import com.yevhenii.service.models.Document;
 import hu.akarnokd.rxjava.interop.RxJavaInterop;
 import io.reactivex.*;
-import rx.functions.Func1;
 
-import java.util.function.Function;
-
-import static com.couchbase.client.java.query.Select.select;
 
 public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>> {
 
     private final int PAGE_SIZE;
 
     private AsyncBucket bucket;
+    private final String bucketName;
     private final Cluster cluster;
     private final Class<T> clazz;
 
@@ -29,6 +24,7 @@ public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>>
         this.bucket = cluster.openBucket(bucketName).async();
         this.clazz = clazz;
         PAGE_SIZE = pageSize;
+        this.bucketName = bucketName;
     }
 
     @Override
@@ -43,9 +39,7 @@ public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>>
 
     @Override
     public Flowable<Document<T>> findAll() {
-        Statement select = select("META(b).id, b.*, META(b).cas")
-                .from(bucket.name())
-                .as("b");
+        Statement select = Queries.buildSelectStatement(bucketName);
 
         return RxJavaInterop.toV2Flowable(
                 bucket.query(select)
@@ -63,9 +57,7 @@ public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>>
     @Override
     public Observable<Document<T>> findAll(int offset, int size) {
 
-        Statement select = select("META(b).id, b.*, META(b).cas")
-                .from(bucket.name())
-                .as("b")
+        Statement select = Queries.buildSelectStatement(bucketName)
                 .limit(size)
                 .offset(offset);
 
@@ -116,7 +108,7 @@ public class ReactiveCouchbaseDao<T> implements ReactiveDao<String, Document<T>>
     @Override
     public Observable<Boolean> closeCurrentBucket() {
         Observable<Boolean> res = RxJavaInterop.toV2Observable(bucket.close());
-        res.subscribe(r -> this.bucket = cluster.openBucket().async());
+        res.subscribe(r -> this.bucket = cluster.openBucket(bucketName).async());
         return res;
     }
 }

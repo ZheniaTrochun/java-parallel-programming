@@ -37,6 +37,7 @@ public class BeanCreator {
         return new CouchbaseDao<>(
                 cluster,
                 properties.getCouchbase().getBucket(),
+                properties.getPageSize(),
                 DataObject.class
         );
     }
@@ -46,6 +47,7 @@ public class BeanCreator {
         return new ReactiveCouchbaseDao<>(
                 cluster,
                 properties.getCouchbase().getBucket(),
+                properties.getPageSize(),
                 DataObject.class
         );
     }

@@ -8,21 +8,18 @@ import com.yevhenii.service.models.DataObject;
 import com.yevhenii.service.models.Document;
 import com.yevhenii.service.models.dto.DataObjectDto;
 import com.yevhenii.service.profiling.Profilers;
-import com.yevhenii.service.utils.FileUtils;
-import com.yevhenii.service.utils.FutureUtils;
-import com.yevhenii.service.utils.JsonUtils;
-import com.yevhenii.service.utils.Pair;
+import com.yevhenii.service.utils.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Slf4j
 @Service
@@ -45,50 +42,21 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
     }
 
     @Override
-    public CompletableFuture<List<Document<DataObject>>> loadDataFromFile(Optional<String> filename) {
-        File file = new File(filename.orElse(DEFAULT_FILE));
+    public CompletableFuture<List<Document<DataObject>>> loadDataFromFile() {
 
-        int partSize = (int) Math.ceil((double) file.length() / PARALLELISM);
-
-        List<CompletableFuture<Pair<Integer, String>>> futureParts =
-                FutureUtils.iterateParallel(PARALLELISM, (i) -> Pair.of(i, FileUtils.readPart(file, i * partSize, partSize)))
-                        .stream()
-                        .map(future ->
-                                FutureUtils.getPairOrFail(
-                                        future,
-                                        () -> new IOException("Error reading file: " + file.getName())
-                                )
-                        )
-                        .collect(Collectors.toList());
-
-        return FutureUtils.traverse(futureParts)
-                .thenApply(stream ->
-                        stream.stream()
-                                .sorted(Comparator.comparing(Pair::getLeft))
-                                .map(Pair::getRight)
-                                .reduce("", String::concat)
-                )
-                .thenApply(str -> str.replace("}{", "}\n{"))
-                .thenApply(this::splitIntoParts)
-                .thenApply(parts ->
-                        parts.stream()
-                                .map(this::writePart)
-                                .collect(Collectors.toList())
-                )
-                .thenCompose(FutureUtils::traverse)
-                .thenApply(streams ->
-                        streams.stream()
-                                .map(List::stream)
-                                .flatMap(Function.identity())
-                                .collect(Collectors.toList()));
-
+        return traverse(readFileParallel())
+                .thenApply(this::collect)
+                .thenApply(Utils::splitByLines)
+                .thenApply(lines -> Utils.divideIntoParts(lines, PARALLELISM))
+                .thenComposeAsync(this::deserializeAndSave)
+                .thenApply(this::flatten);
     }
 
     @Override
     public CompletableFuture<List<Document<DataObject>>> readPage(int page) {
         int partSize = dao.getPageSize() / PARALLELISM;
 
-        CompletableFuture<List<List<Document<DataObject>>>> future = FutureUtils.traverse(
+        CompletableFuture<List<List<Document<DataObject>>>> future = traverse(
                 FutureUtils.iterateParallel(PARALLELISM, readPartFromDbProfiled(partSize))
         );
 
@@ -99,15 +67,54 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
     private Function<Integer, List<Document<DataObject>>> readPartFromDbProfiled(int partSize) {
         return Profilers.simpleProfiler(
                         "Reading part of data from db",
-                        (i) -> dao.findAll(i * partSize, partSize)
+                        i -> dao.findAll(i * partSize, partSize)
                 );
     }
 
     private Function<Integer, Optional<String>> readPartFromFileProfiled(File file, int partSize) {
         return Profilers.simpleProfiler(
                         "Reading part of data from db",
-                        (i) -> FileUtils.readPart(file, i * partSize, partSize)
+                        i -> FileUtils.readPart(file, i * partSize, partSize)
                 );
+    }
+
+    private List<CompletableFuture<String>> readFileParallel() {
+        File file = new File(DEFAULT_FILE);
+        int partSize = (int) Math.ceil((double) file.length() / PARALLELISM);
+
+        return IntStream.range(0, PARALLELISM).boxed()
+                .map(i ->
+                        CompletableFuture.supplyAsync(() ->
+                                FileUtils.readPart(file, i * partSize, partSize)
+                                        .orElseThrow(() -> new RuntimeException("Read failed"))
+                        )
+                )
+                .collect(Collectors.toList());
+    }
+
+    private <T> CompletableFuture<List<T>> traverse(List<CompletableFuture<T>> futures) {
+        CompletableFuture<List<T>> traversed = CompletableFuture.supplyAsync(LinkedList::new);
+
+        for (CompletableFuture<T> future : futures) {
+            traversed.thenApplyAsync(list -> future.thenApply(list::add));
+        }
+
+        return traversed;
+    }
+
+//    todo dangerous part
+    private String collect(List<String> parts) {
+        return parts.stream()
+                .map(StringBuffer::new)
+                .reduce(new StringBuffer(), (left, right) -> right.append(left))
+                .toString();
+    }
+
+    private <T> List<T> flatten(List<List<T>> lists) {
+        return lists.stream()
+                .map(List::stream)
+                .flatMap(Function.identity())
+                .collect(Collectors.toList());
     }
 
 //    TODO rewrite
@@ -129,15 +136,35 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
         return partitions;
     }
 
-    private CompletableFuture<List<Document<DataObject>>> writePart(List<String> strings) {
-        return CompletableFuture.supplyAsync(() -> strings.stream().map(str -> JsonUtils.readJson(str, DataObjectDto.class)).collect(Collectors.toList()))
+    private CompletableFuture<List<List<Document<DataObject>>>> deserializeAndSave(List<List<String>> jsons) {
+        return traverse(
+                jsons.stream()
+                        .map(this::writePart)
+                        .collect(Collectors.toList())
+        );
+    }
+
+    private CompletableFuture<List<Document<DataObject>>> writePart(List<String> jsons) {
+        return CompletableFuture.supplyAsync(() -> deserialize(jsons))
                 .thenCompose(parsed ->
                         FutureUtils.getFutureListOrFail(parsed, () -> new JsonParseException("Failed to parse JSON")))
-                .thenApply(parsed -> parsed.stream().map(toDocumentConverter).map(dao::insert).collect(Collectors.toList()))
-//                .thenApply(parsed -> parsed.stream().map(toDocumentConverter).collect(Collectors.toList()))
+                .thenApply(this::convertAndSave)
                 .exceptionally(e -> {
                     System.out.println(e.getMessage());
                     return new ArrayList<>();
                 });
+    }
+
+    private List<Document<DataObject>> convertAndSave(List<DataObjectDto> objects) {
+        return objects.stream()
+                .map(toDocumentConverter)
+                .map(dao::insert)
+                .collect(Collectors.toList());
+    }
+
+    private List<Optional<DataObjectDto>> deserialize(List<String> jsons) {
+        return jsons.stream()
+                .map(str -> JsonUtils.readJson(str, DataObjectDto.class))
+                .collect(Collectors.toList());
     }
 }

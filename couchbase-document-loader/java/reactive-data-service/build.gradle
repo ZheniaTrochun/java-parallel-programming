@@ -30,22 +30,20 @@ repositories {
 
 
 dependencies {
-    compile('org.springframework.boot:spring-boot-starter-actuator:2.0.5.RELEASE')
-    compile('org.springframework.boot:spring-boot-starter-webflux:2.0.5.RELEASE')
-    compile('org.springframework:spring-context')
-    compile('io.netty:netty-buffer:1.4.30.Final')
-    compile('io.projectreactor.ipc:reactor-netty:0.7.11.RELEASE')
+//    spring boot
+//    compile('org.springframework.boot:spring-boot-starter-webflux:2.0.5.RELEASE')
+    compile('org.springframework.boot:spring-boot-starter-web:2.0.5.RELEASE')
 
-    compile group: 'org.springframework.cloud', name: 'spring-cloud-netflix-core', version: '2.0.1.RELEASE'
-
+//    for reactive endpoints
+    compile('org.springframework.cloud:spring-cloud-netflix-core:2.0.1.RELEASE')
     compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-parent', version: 'Finchley.RELEASE', ext: 'pom'
 
-    compile('org.hibernate:hibernate-core:5.3.6.Final')
     compile('io.reactivex.rxjava2:rxjava:2.2.2')
-    compile('org.hibernate:hibernate-entitymanager:5.3.6.Final')
     compile('com.couchbase.client:java-client:2.6.2')
     compile('com.github.akarnokd:rxjava2-interop:0.13.2')
     compile('com.google.code.gson:gson:2.8.5')
+
+//    test
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('io.projectreactor:reactor-test')
 

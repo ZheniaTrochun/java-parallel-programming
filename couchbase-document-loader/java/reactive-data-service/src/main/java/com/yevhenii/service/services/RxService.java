@@ -9,7 +9,7 @@ import java.util.Optional;
 
 public interface RxService {
 
-    Flowable<Document<DataObject>> loadDataFromFile(Optional<String> file);
+    Flowable<Document<DataObject>> loadDataFromFile();
 
     Observable<Document<DataObject>> readPage(int page);
 }

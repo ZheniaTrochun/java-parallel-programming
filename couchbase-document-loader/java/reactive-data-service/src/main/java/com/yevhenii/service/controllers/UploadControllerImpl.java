@@ -41,7 +41,7 @@ public class UploadControllerImpl implements UploadController {
     @RequestMapping(method = RequestMethod.GET, path = "/data/upload/completable-future")
     public ResponseEntity<Integer> completableFutureUpload() throws ExecutionException, InterruptedException {
         CompletableFuture<Integer> future =
-                completableFutureService.loadDataFromFile(Optional.empty())
+                completableFutureService.loadDataFromFile()
                         .thenApply(List::size);
 
         return future.handle((count, err) ->
@@ -73,7 +73,7 @@ public class UploadControllerImpl implements UploadController {
     @Override
     @RequestMapping(method = RequestMethod.GET, path = "/data/upload/rx")
     public Single<Integer> reactiveUpload() {
-        return rxService.loadDataFromFile(Optional.empty())
+        return rxService.loadDataFromFile()
                 .count()
                 .map(Long::intValue);
     }

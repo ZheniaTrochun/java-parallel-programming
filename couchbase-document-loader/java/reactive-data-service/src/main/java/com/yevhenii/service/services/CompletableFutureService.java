@@ -9,7 +9,7 @@ import java.util.concurrent.CompletableFuture;
 
 public interface CompletableFutureService {
 
-    CompletableFuture<List<Document<DataObject>>> loadDataFromFile(Optional<String> filename);
+    CompletableFuture<List<Document<DataObject>>> loadDataFromFile();
 
     CompletableFuture<List<Document<DataObject>>> readPage(int page);
 }

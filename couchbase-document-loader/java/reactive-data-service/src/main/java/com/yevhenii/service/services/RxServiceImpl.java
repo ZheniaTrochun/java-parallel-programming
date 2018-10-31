@@ -9,18 +9,18 @@ import com.yevhenii.service.models.Document;
 import com.yevhenii.service.models.dto.DataObjectDto;
 import com.yevhenii.service.utils.FileUtils;
 import com.yevhenii.service.utils.JsonUtils;
-import com.yevhenii.service.utils.RxUtils;
+import com.yevhenii.service.utils.Utils;
 import io.reactivex.*;
+import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -43,72 +43,50 @@ public class RxServiceImpl implements RxService {
 
     //  TODO think about this
     @Override
-    public Flowable<Document<DataObject>> loadDataFromFile(Optional<String> filename) {
+    public Flowable<Document<DataObject>> loadDataFromFile() {
 
-        File file = new File(filename.orElse(DEFAULT_FILE));
-
-        int partSize = (int) Math.ceil((double) file.length() / PARALLELISM);
-
-        Maybe<String> string =
-                RxUtils.parallel(PARALLELISM, (i) -> FileUtils.readPart(file, i * partSize, partSize))
-                        .map(Optional::get)
-                        .reduce(String::concat);
-
-//        string.subscribe(str -> log.debug("file:\n" + str + "\nEOF"));
-
-//                Flowable.fromIterable(IntStream.range(0, PARALLELISM).boxed().collect(Collectors.toList()))
-//                        .flatMap(i -> Flowable.just(i).subscribeOn(Schedulers.computation()))
-//                        .map(i -> FileUtils.readPart(file, i * partSize, partSize))
-//                        .map(Optional::get)
-//                        .collect(() -> "", String::concat);
-
-        return string.toFlowable()
-                .map(str -> str.replace("}{", "}\n{"))
-                .flatMap(str ->
-                        RxUtils.parallelSingle(
-                                Arrays.stream(str.split("\n"))
-                                        .filter(s -> !s.isEmpty())
-                                        .collect(Collectors.toList()),
-                                PARALLELISM,
-                                (elem) -> JsonUtils.tryReadJson(elem, DataObjectDto.class)
-                                        .map(toDocumentConverter)
-                                        .map(dao::insert)
-                                        .orElseThrow(() -> new JsonParseException("invalid json!"))
-                        ).toFlowable(BackpressureStrategy.BUFFER)
+        return readFileParallel()
+                .toFlowable()
+                .map(Utils::splitByLines)
+                .flatMap(this::divideIntoParts)
+                .flatMap(part ->
+                        part.flatMap(str -> deserializeAndSave(str).toObservable())
+                                .toFlowable(BackpressureStrategy.BUFFER)
                 )
                 .doOnError(err -> log.error(err.getMessage()))
                 .doOnComplete(dao::closeCurrentBucket);
-
-
-//                .toFlowable()
-//                .map(str -> str.split("\n"))
-//                .flatMap(Flowable::fromArray)
-//                .map(json -> JsonUtils.readJson(json, DataObjectDto.class))
-//                // will fail if there will be some incorrect json objects
-//                .map(Optional::get)
-//                .map(toDocumentConverter)
-//                .map(dao::insert)
-//                // TODO check next line
-//                .flatMap(Single::toFlowable);
-
-//        return Flowable.fromIterable(IntStream.range(0, PARALLELISM).boxed().collect(Collectors.toList()))
-//                .map(i -> FileUtils.readPart(file, i * partSize, partSize))
-//                .map(Optional::get)
-//                .collect(() -> "", String::concat)
-//                .toFlowable()
-//                .map(str -> str.split("\n"))
-//                .flatMap(Flowable::fromArray)
-//                .map(json -> JsonUtils.readJson(json, DataObjectDto.class))
-//                // will fail if there will be some incorrect json objects
-//                .map(Optional::get)
-//                .map(toDocumentConverter)
-//                .map(dao::insert)
-//                // TODO check next line
-//                .flatMap(Single::toFlowable);
     }
 
     @Override
     public Observable<Document<DataObject>> readPage(int page) {
         return dao.findAll(page);
+    }
+
+
+    private Maybe<String> readFileParallel() {
+        File file = new File(DEFAULT_FILE);
+
+        int partSize = (int) Math.ceil((double) file.length() / PARALLELISM);
+
+        return Observable.range(0, PARALLELISM)
+                .subscribeOn(Schedulers.computation())
+                .map(i -> FileUtils.readPart(file, i * partSize, partSize))
+                .map(Optional::get)
+                .map(StringBuffer::new)
+                .reduce(StringBuffer::append)
+                .map(StringBuffer::toString);
+    }
+
+    private Flowable<Observable<String>> divideIntoParts(List<String> list) {
+        return Flowable.fromIterable(Utils.divideIntoParts(list, PARALLELISM))
+                .map(Observable::fromIterable)
+                .map(obs -> obs.subscribeOn(Schedulers.computation()));
+    }
+
+    private Single<Document<DataObject>> deserializeAndSave(String str) {
+        return JsonUtils.readJson(str, DataObjectDto.class)
+                .map(toDocumentConverter)
+                .map(dao::insert)
+                .orElseGet(() -> Single.error(new JsonParseException(str)));
     }
 }

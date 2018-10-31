@@ -14,8 +14,6 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static com.couchbase.client.java.query.Select.*;
-
 
 public class CouchbaseDao<T> implements Dao<String, Document<T>> {
 
@@ -41,22 +39,10 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
                 .map(doc -> Document.read(doc, clazz));
     }
 
-//    todo think about maps
     @Override
     public List<Document<T>> findAll() {
-//        with map/reduce index
-//        return bucket.query(ViewQuery.from("design", "view"))
-//                .allRows()
-//                .stream()
-//                .map(ViewRow::document)
-//                .map(toEntityConverter)
-//                .collect(Collectors.toList());
 
-        Statement select = select("META(b).id, b.*, META(b).cas")
-                .from(bucket.name())
-                .as("b");
-
-        return bucket.query(select)
+        return bucket.query(Queries.buildSelectStatement(bucketName))
                 .allRows()
                 .stream()
                 .map(N1qlQueryRow::value)
@@ -73,9 +59,7 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
     @Override
     public List<Document<T>> findAll(int offset, int size) {
 
-        Statement select = select("META(b).id, b.*, META(b).cas")
-                .from(bucket.name())
-                .as("b")
+        Statement select = Queries.buildSelectStatement(bucketName)
                 .limit(size)
                 .offset(offset);
 
@@ -116,15 +100,19 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
     @Override
     public boolean deleteAll() {
         close();
+
         cluster.clusterManager().removeBucket(bucketName);
         cluster.clusterManager().insertBucket(DefaultBucketSettings.builder().name(bucketName).quota(500).build());
         bucket = cluster.openBucket(bucketName);
-        return bucket.query(N1qlQuery.simple("create primary index on `" + bucket.name() + "`")).finalSuccess();
+
+        return bucket.query(
+                N1qlQuery.simple(String.format(Queries.CREATE_INDEX, bucketName))
+        ).finalSuccess();
     }
 
     @Override
     public int getSize() {
-        N1qlQuery query = N1qlQuery.simple("SELECT COUNT(*) AS size FROM `" + bucket.name() + "`");
+        N1qlQuery query = N1qlQuery.simple(String.format(Queries.COUNT_ALL, bucketName));
 
         return bucket.query(query)
                 .allRows()

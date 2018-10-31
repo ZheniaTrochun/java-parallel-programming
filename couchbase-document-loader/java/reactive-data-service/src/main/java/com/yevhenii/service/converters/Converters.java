@@ -1,11 +1,8 @@
 package com.yevhenii.service.converters;
 
-import com.couchbase.client.java.document.JsonDocument;
-import com.couchbase.client.java.document.json.JsonObject;
 import com.yevhenii.service.models.DataObject;
 import com.yevhenii.service.models.Document;
 import com.yevhenii.service.models.dto.DataObjectDto;
-import com.yevhenii.service.utils.JsonUtils;
 
 import java.util.function.Function;
 
