@@ -44,18 +44,14 @@ public class RxServiceImpl implements RxService {
         this.PARALLELISM = properties.getParallelism();
     }
 
-    //  TODO think about this
     @Override
     public Flowable<Document<DataObject>> loadDataFromFile() {
 
         return readFileParallel()
                 .toFlowable()
                 .map(Utils::splitByLines)
-                .concatMap(this::divideIntoParts)
-                .flatMap(part ->
-                        part.flatMap(str -> deserializeAndSave(str).toObservable())
-                                .toFlowable(BackpressureStrategy.BUFFER)
-                )
+                .flatMap(this::divideIntoParts)
+                .flatMap(part -> deserializeAndSave(part).toFlowable())
                 .doOnError(err -> log.error(err.getMessage()))
                 .doOnComplete(dao::closeCurrentBucket);
     }
@@ -80,10 +76,9 @@ public class RxServiceImpl implements RxService {
                 .map(StringBuffer::toString);
     }
 
-    private Flowable<Observable<String>> divideIntoParts(List<String> list) {
+    private Flowable<String> divideIntoParts(List<String> list) {
         return Flowable.fromIterable(Utils.divideIntoParts(list, PARALLELISM))
-                .map(Observable::fromIterable)
-                .map(obs -> obs.subscribeOn(Schedulers.computation()));
+                .concatMap(lst -> Flowable.fromIterable(lst).subscribeOn(Schedulers.computation()));
     }
 
     private Single<Document<DataObject>> deserializeAndSave(String str) {
