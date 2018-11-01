@@ -93,8 +93,6 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
 
 
     private CompletableFuture<List<List<Document<DataObject>>>> deserializeAndSave(List<List<String>> jsons) {
-        log.info("Deserialize and save: " + jsons.size());
-
         return FutureUtils.traverse(
                 jsons.stream()
                         .map(this::writePart)

@@ -73,7 +73,7 @@ public class RxServiceImpl implements RxService {
                 .map(StringBuffer::new)
                 .reduce(StringBuffer::append)
                 .map(StringBuffer::toString);
-//        todo sme but with subscribeOn
+//        todo same but with subscribeOn
 //        return Observable.range(0, PARALLELISM)
 //                .concatMap(i ->
 //                        Observable.just(FileUtils.readPart(file, i * partSize, partSize))
