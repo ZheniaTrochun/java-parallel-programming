@@ -11,6 +11,7 @@ import com.yevhenii.service.utils.ControllerUtils;
 import io.reactivex.Observable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,7 +43,7 @@ public class DownloadControllerImpl implements DownloadController {
 
     @Override
     @RequestMapping(method = RequestMethod.GET, path = "/data/download/completable-future/{page}")
-    public ResponseEntity<List<DataObjectDto>> completableFutureRead(Integer page) throws ExecutionException, InterruptedException {
+    public ResponseEntity<List<DataObjectDto>> completableFutureRead(@PathVariable Integer page) throws ExecutionException, InterruptedException {
 
         return completableFutureService
                 .readPage(page)
@@ -63,7 +64,7 @@ public class DownloadControllerImpl implements DownloadController {
 
     @Override
     @RequestMapping(method = RequestMethod.GET, path = "/data/download/sequential/{page}")
-    public ResponseEntity<List<DataObjectDto>> sequentialRead(Integer page) {
+    public ResponseEntity<List<DataObjectDto>> sequentialRead(@PathVariable Integer page) {
         return ResponseEntity.ok(
                 sequentialService.readPage(page).stream()
                         .map(dtoConverter)
@@ -73,7 +74,7 @@ public class DownloadControllerImpl implements DownloadController {
 
     @Override
     @RequestMapping(method = RequestMethod.GET, path = "/data/download/rx/{page}")
-    public Observable<DataObjectDto> reactiveRead(Integer page) {
+    public Observable<DataObjectDto> reactiveRead(@PathVariable Integer page) {
         return rxService.readPage(page)
                 .map(dtoConverter::apply);
     }

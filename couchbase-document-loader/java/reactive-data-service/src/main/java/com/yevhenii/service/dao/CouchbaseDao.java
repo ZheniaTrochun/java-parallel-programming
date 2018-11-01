@@ -109,7 +109,7 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
 //                N1qlQuery.simple(String.format(Queries.CREATE_INDEX, bucketName))
 //        ).finalSuccess();
 
-        return bucket.query(N1qlQuery.simple("DELETE FROM `" + bucketName + "`")).finalSuccess();
+        return bucket.query(N1qlQuery.simple(String.format(Queries.DELETE_ALL, bucketName))).finalSuccess();
     }
 
     @Override

@@ -14,11 +14,9 @@ public class Utils {
     public static <T> List<List<T>> divideIntoParts(List<T> list, int parts) {
         int partSize = ceilDivision(list.size(), parts);
 
-        List<List<T>> lists = IntStream.range(0, parts).boxed()
+        return IntStream.range(0, parts).boxed()
                 .map(i -> list.subList(i * partSize, Math.min((i + 1) * partSize, list.size())))
                 .collect(Collectors.toList());
-
-        return lists;
     }
 
     public static List<String> splitByLines(String str) {

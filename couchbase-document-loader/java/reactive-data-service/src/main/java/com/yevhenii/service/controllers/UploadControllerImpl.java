@@ -48,7 +48,7 @@ public class UploadControllerImpl implements UploadController {
                 Optional.ofNullable(err)
                         .map(e ->
                                 ControllerUtils.<Integer>failWithLogging(e,
-                                        "Error occurred during processing sequential upload", log)
+                                        "Error occurred during processing completable-future upload", log)
                         )
                         .orElseGet(() -> ResponseEntity.ok(count))
         ).get();
@@ -59,7 +59,7 @@ public class UploadControllerImpl implements UploadController {
     public ResponseEntity<Integer> sequentialUpload() {
         try {
             return ResponseEntity.ok(
-                    sequentialService.loadDataFromFile(Optional.empty()).size()
+                    sequentialService.loadDataFromFile().size()
             );
         } catch (IOException e) {
             return ControllerUtils.failWithLogging(e,

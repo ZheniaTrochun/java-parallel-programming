@@ -48,7 +48,6 @@ public class RxServiceImpl implements RxService {
         return readFileParallel()
                 .toFlowable()
                 .flatMap(str -> Flowable.fromIterable(Utils.splitByLines(str)))
-//                .flatMap(this::divideIntoParts)
                 .parallel(PARALLELISM)
                 .flatMap(part -> deserializeAndSave(part).toFlowable())
                 .sequential()
@@ -67,18 +66,23 @@ public class RxServiceImpl implements RxService {
 
         int partSize = (int) Math.ceil((double) file.length() / PARALLELISM);
 
-        return Observable.range(0, PARALLELISM)
-                .concatMap(i ->
-                        Observable.just(FileUtils.readPart(file, i * partSize, partSize))
-                                .subscribeOn(Schedulers.computation())
-                                .map(Optional::get)
-                )
-//                .subscribeOn(Schedulers.computation())
-//                .map(i -> FileUtils.readPart(file, i * partSize, partSize))
-//                .map(Optional::get)
+        return Flowable.range(0, PARALLELISM)
+                .parallel(PARALLELISM)
+                .map(i -> FileUtils.readPart(file, i * partSize, partSize).get())
+                .sequential()
                 .map(StringBuffer::new)
                 .reduce(StringBuffer::append)
                 .map(StringBuffer::toString);
+//        todo sme but with subscribeOn
+//        return Observable.range(0, PARALLELISM)
+//                .concatMap(i ->
+//                        Observable.just(FileUtils.readPart(file, i * partSize, partSize))
+//                                .subscribeOn(Schedulers.computation())
+//                                .map(Optional::get)
+//                )
+//                .map(StringBuffer::new)
+//                .reduce(StringBuffer::append)
+//                .map(StringBuffer::toString);
     }
 
     private Flowable<String> divideIntoParts(List<String> list) {

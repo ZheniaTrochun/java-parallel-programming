@@ -41,8 +41,8 @@ public class SequentialServiceImpl implements SequentialService {
 
 //    TODO rewrite
     @Override
-    public List<Document<DataObject>> loadDataFromFile(Optional<String> filename) throws IOException {
-        File file = new File(filename.orElse(DEFAULT_FILE));
+    public List<Document<DataObject>> loadDataFromFile() throws IOException {
+        File file = new File(DEFAULT_FILE);
         Optional<String> content = FileUtils.readPart(file, 0, (int) file.length());
 
         return content.map(str ->
@@ -59,30 +59,4 @@ public class SequentialServiceImpl implements SequentialService {
     public List<Document<DataObject>> readPage(int page) {
         return dao.findAll(page);
     }
-
-    @Override
-    public Pair<Long, List<Document<DataObject>>> loadDataFromFileProfiled(Optional<String> filename) throws IOException {
-        File file = new File(filename.orElse(DEFAULT_FILE));
-        Optional<String> content = FileUtils.readPart(file, 0, (int) file.length());
-
-        return content.map(str ->
-                        Profilers.withProfiler(() ->
-                                Arrays.stream(str.split("\n"))
-                                        .map(line -> JsonUtils.readJson(line, DataObjectDto.class))
-                                        .map(Optional::get)
-                                        .map(toDocumentConverter)
-                                        .map(dao::insert)
-                                        .collect(Collectors.toList())
-                        ).get()
-
-        ).orElseThrow(() -> new IOException("Error reading file: " + file.getName()));
-    }
-
-    @Override
-    public Pair<Long, List<Document<DataObject>>> readPageProfiled(int page) {
-        return Profilers.withProfiler(() ->
-                dao.findAll(page)
-        ).get();
-    }
-
 }

@@ -8,6 +8,7 @@ public class Queries {
 
     public static final String COUNT_ALL = "SELECT COUNT(*) AS size FROM `%s`";
     public static final String CREATE_INDEX = "create primary index on `%s`";
+    public static final String DELETE_ALL = "DELETE FROM `%s`";
 
     private static final String SELECT_ALL = "META(b).id, b.*, META(b).cas";
 

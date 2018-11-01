@@ -22,7 +22,7 @@ public class AdministrationControllerImpl implements AdministrationController {
     public ResponseEntity<Void> deleteAllRecords() {
         return service.deleteAll() ?
                 ResponseEntity.ok().build() :
-                ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+                ResponseEntity.badRequest().build();
     }
 
     @Override

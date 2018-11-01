@@ -26,37 +26,6 @@ public class FutureUtils {
         );
     }
 
-    public static <T, S> CompletableFuture<Pair<S, T>> getPairOrFail(CompletableFuture<Pair<S, Optional<T>>> futureOption,
-                                                                     Supplier<Throwable> failError) {
-
-        return futureOption.thenCompose(opt ->
-                Pair.traverse(opt)
-                        .map(CompletableFuture::completedFuture)
-                        .orElseGet(() -> FutureUtils.failed(failError.get()))
-        );
-    }
-
-    public static <T> CompletableFuture<Stream<T>> getStreamOrFail(CompletableFuture<Stream<Optional<T>>> futureOption,
-                                                                   Supplier<Throwable> failError) {
-
-        return futureOption.thenCompose(stream ->
-                stream.anyMatch(opt -> !opt.isPresent()) ?
-                        FutureUtils.failed(failError.get()) :
-                        CompletableFuture.completedFuture(stream.map(Optional::get))
-        );
-    }
-
-    public static <T> CompletableFuture<Stream<T>> getFutureStreamOrFail(Stream<Optional<T>> stream,
-                                                                         Supplier<Throwable> failError) {
-
-        List<Optional<T>> list = stream.collect(Collectors.toList());
-
-        return list.contains(Optional.<T>empty()) ?
-                FutureUtils.failed(failError.get()) :
-                CompletableFuture.completedFuture(list.stream().map(Optional::get));
-    }
-
-
     public static <T> CompletableFuture<List<T>> getFutureListOrFail(List<Optional<T>> list,
                                                                      Supplier<Throwable> failError) {
 
@@ -65,26 +34,28 @@ public class FutureUtils {
                 CompletableFuture.completedFuture(list.stream().map(Optional::get).collect(Collectors.toList()));
     }
 
-
-    public static <T> CompletableFuture<Stream<T>> getFutureStreamOptionOrFail(CompletableFuture<Stream<Optional<T>>> future,
-                                                                               Supplier<Throwable> failError) {
-
-        return future.thenCompose(stream ->
-                stream.anyMatch(opt -> !opt.isPresent()) ?
-                        FutureUtils.failed(failError.get()) :
-                        CompletableFuture.completedFuture(stream.map(Optional::get))
-        );
-    }
-
-
-    public static <T, R> Stream<CompletableFuture<R>> iterateParallel(Stream<T> range, Function<T, R> mapper) {
-        return range.map(item -> CompletableFuture.supplyAsync(() -> mapper.apply(item)));
-    }
-
-    public static <R> List<CompletableFuture<R>> iterateParallel(int times, Function<Integer, R> mapper) {
-        return IntStream.range(0, times)
-                .boxed()
+    public static <R> List<CompletableFuture<R>> iterateParallel(IntStream range, Function<Integer, R> mapper) {
+        return range.boxed()
                 .map(item -> CompletableFuture.supplyAsync(() -> mapper.apply(item)))
                 .collect(Collectors.toList());
     }
+
+
+    public static <T> CompletableFuture<List<T>> traverse(List<CompletableFuture<T>> futures) {
+        return traverseLoop(futures, CompletableFuture.completedFuture(new ArrayList<>()));
+    }
+
+    private static <T> CompletableFuture<List<T>> traverseLoop(List<CompletableFuture<T>> futureList,
+                                                               CompletableFuture<List<T>> current) {
+        Optional<CompletableFuture<T>> head = futureList.stream().findFirst();
+        if (!head.isPresent()) {
+            return current;
+        }
+        CompletableFuture<T> future = head.get();
+        return traverseLoop(
+                futureList.stream().skip(1).collect(Collectors.toList()),
+                current.thenComposeAsync(stream -> future.thenApplyAsync(curr -> Stream.concat(stream.stream(), Stream.of(curr)).collect(Collectors.toList())))
+        );
+    }
+
 }
