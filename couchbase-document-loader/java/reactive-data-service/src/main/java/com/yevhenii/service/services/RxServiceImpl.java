@@ -11,6 +11,7 @@ import com.yevhenii.service.utils.FileUtils;
 import com.yevhenii.service.utils.JsonUtils;
 import com.yevhenii.service.utils.Utils;
 import io.reactivex.*;
+import io.reactivex.parallel.ParallelFlowable;
 import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,9 +19,6 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -49,9 +47,11 @@ public class RxServiceImpl implements RxService {
 
         return readFileParallel()
                 .toFlowable()
-                .map(Utils::splitByLines)
-                .flatMap(this::divideIntoParts)
+                .flatMap(str -> Flowable.fromIterable(Utils.splitByLines(str)))
+//                .flatMap(this::divideIntoParts)
+                .parallel(PARALLELISM)
                 .flatMap(part -> deserializeAndSave(part).toFlowable())
+                .sequential()
                 .doOnError(err -> log.error(err.getMessage()))
                 .doOnComplete(dao::closeCurrentBucket);
     }
@@ -68,9 +68,14 @@ public class RxServiceImpl implements RxService {
         int partSize = (int) Math.ceil((double) file.length() / PARALLELISM);
 
         return Observable.range(0, PARALLELISM)
-                .subscribeOn(Schedulers.computation())
-                .map(i -> FileUtils.readPart(file, i * partSize, partSize))
-                .map(Optional::get)
+                .concatMap(i ->
+                        Observable.just(FileUtils.readPart(file, i * partSize, partSize))
+                                .subscribeOn(Schedulers.computation())
+                                .map(Optional::get)
+                )
+//                .subscribeOn(Schedulers.computation())
+//                .map(i -> FileUtils.readPart(file, i * partSize, partSize))
+//                .map(Optional::get)
                 .map(StringBuffer::new)
                 .reduce(StringBuffer::append)
                 .map(StringBuffer::toString);
