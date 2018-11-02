@@ -21,6 +21,11 @@ public class AdministrationServiceImpl implements AdministrationService {
     }
 
     @Override
+    public boolean recreateBucket() {
+        return dao.recreateBucket();
+    }
+
+    @Override
     public int getDbSize() {
         return dao.getSize();
     }

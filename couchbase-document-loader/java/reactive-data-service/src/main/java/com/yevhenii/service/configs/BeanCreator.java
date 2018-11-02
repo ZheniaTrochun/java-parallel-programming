@@ -36,7 +36,8 @@ public class BeanCreator {
     public CouchbaseDao<DataObject> dataObjectDao(Cluster cluster, AppPropertyHolder properties) {
         return new CouchbaseDao<>(
                 cluster,
-                properties.getCouchbase().getBucket(),
+                properties.getCouchbase().getBucket().getName(),
+                properties.getCouchbase().getBucket().getQuota(),
                 properties.getPageSize(),
                 DataObject.class
         );
@@ -46,7 +47,7 @@ public class BeanCreator {
     public ReactiveCouchbaseDao<DataObject> dataObjectReactiveDao(Cluster cluster, AppPropertyHolder properties) {
         return new ReactiveCouchbaseDao<>(
                 cluster,
-                properties.getCouchbase().getBucket(),
+                properties.getCouchbase().getBucket().getName(),
                 properties.getPageSize(),
                 DataObject.class
         );

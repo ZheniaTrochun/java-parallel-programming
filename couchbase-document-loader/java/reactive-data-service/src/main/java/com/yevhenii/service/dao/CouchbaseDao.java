@@ -23,11 +23,13 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
     private final int PAGE_SIZE;
 
     private final Class<T> clazz;
+    private final int quota;
 
-    public CouchbaseDao(Cluster cluster, String bucketName, int pageSize, Class<T> clazz) {
+    public CouchbaseDao(Cluster cluster, String bucketName, int quota, int pageSize, Class<T> clazz) {
         this.cluster = cluster;
         this.bucket = cluster.openBucket(bucketName);
         this.bucketName = bucketName;
+        this.quota = quota;
         this.clazz = clazz;
         PAGE_SIZE = pageSize;
     }
@@ -99,17 +101,25 @@ public class CouchbaseDao<T> implements Dao<String, Document<T>> {
 
     @Override
     public boolean deleteAll() {
-//        close();
-
-//        cluster.clusterManager().removeBucket(bucketName);
-//        cluster.clusterManager().insertBucket(DefaultBucketSettings.builder().name(bucketName).quota(500).build());
-//        bucket = cluster.openBucket(bucketName);
-
-//        return bucket.query(
-//                N1qlQuery.simple(String.format(Queries.CREATE_INDEX, bucketName))
-//        ).finalSuccess();
 
         return bucket.query(N1qlQuery.simple(String.format(Queries.DELETE_ALL, bucketName))).finalSuccess();
+    }
+
+    @Override
+    public boolean recreateBucket() {
+        close();
+
+        cluster.clusterManager().removeBucket(bucketName);
+        cluster.clusterManager().insertBucket(
+                DefaultBucketSettings.builder()
+                        .name(bucketName)
+                        .quota(quota)
+                        .build());
+        bucket = cluster.openBucket(bucketName);
+
+        return bucket.query(
+                N1qlQuery.simple(String.format(Queries.CREATE_INDEX, bucketName))
+        ).finalSuccess();
     }
 
     @Override

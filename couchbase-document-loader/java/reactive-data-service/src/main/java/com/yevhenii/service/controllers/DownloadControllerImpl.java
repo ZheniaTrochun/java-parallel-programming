@@ -8,7 +8,8 @@ import com.yevhenii.service.services.CompletableFutureService;
 import com.yevhenii.service.services.RxService;
 import com.yevhenii.service.services.SequentialService;
 import com.yevhenii.service.utils.ControllerUtils;
-import io.reactivex.Observable;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Single;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -16,11 +17,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -43,18 +42,18 @@ public class DownloadControllerImpl implements DownloadController {
 
     @Override
     @RequestMapping(method = RequestMethod.GET, path = "/data/download/completable-future/{page}")
-    public ResponseEntity<List<DataObjectDto>> completableFutureRead(@PathVariable Integer page) throws ExecutionException, InterruptedException {
+    public ResponseEntity<Long> completableFutureRead(@PathVariable Integer page) throws ExecutionException, InterruptedException {
 
         return completableFutureService
                 .readPage(page)
                 .thenApplyAsync(list -> list.stream()
                         .map(dtoConverter)
-                        .collect(Collectors.toList())
+                        .count()
                 )
                 .handle((list, err) ->
                     Optional.ofNullable(err)
                             .map(e ->
-                                    ControllerUtils.<List<DataObjectDto>>failWithLogging(e,
+                                    ControllerUtils.<Long>failWithLogging(e,
                                             "Error occurred during processing sequential upload", log)
                             )
                             .orElseGet(() -> ResponseEntity.ok(list))
@@ -64,18 +63,22 @@ public class DownloadControllerImpl implements DownloadController {
 
     @Override
     @RequestMapping(method = RequestMethod.GET, path = "/data/download/sequential/{page}")
-    public ResponseEntity<List<DataObjectDto>> sequentialRead(@PathVariable Integer page) {
+    public ResponseEntity<Long> sequentialRead(@PathVariable Integer page) {
         return ResponseEntity.ok(
                 sequentialService.readPage(page).stream()
                         .map(dtoConverter)
-                        .collect(Collectors.toList())
+                        .count()
         );
     }
 
     @Override
     @RequestMapping(method = RequestMethod.GET, path = "/data/download/rx/{page}")
-    public Observable<DataObjectDto> reactiveRead(@PathVariable Integer page) {
+    public Single<Long> reactiveRead(@PathVariable Integer page) {
         return rxService.readPage(page)
-                .map(dtoConverter::apply);
+                .toFlowable(BackpressureStrategy.BUFFER)
+                .parallel()
+                .map(dtoConverter::apply)
+                .sequential()
+                .count();
     }
 }

@@ -18,7 +18,7 @@ public class AdministrationControllerImpl implements AdministrationController {
     }
 
     @Override
-    @RequestMapping("/admin/clear-bucket")
+    @RequestMapping("/admin/bucket/clear")
     public ResponseEntity<Void> deleteAllRecords() {
         return service.deleteAll() ?
                 ResponseEntity.ok().build() :
@@ -26,8 +26,16 @@ public class AdministrationControllerImpl implements AdministrationController {
     }
 
     @Override
-    @RequestMapping("/admin/bucket-size")
+    @RequestMapping("/admin/bucket/size")
     public ResponseEntity<Integer> getDbSize() {
         return ResponseEntity.ok(service.getDbSize());
+    }
+
+    @Override
+    @RequestMapping("/admin/bucket/recreate")
+    public ResponseEntity<Void> recreateBucket() {
+        return service.recreateBucket() ?
+                ResponseEntity.ok().build() :
+                ResponseEntity.badRequest().build();
     }
 }

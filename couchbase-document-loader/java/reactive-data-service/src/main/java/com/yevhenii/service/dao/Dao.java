@@ -21,6 +21,8 @@ public interface Dao<K, E> {
 
     boolean deleteAll();
 
+    boolean recreateBucket();
+
     int getSize();
 
     int getPageSize();

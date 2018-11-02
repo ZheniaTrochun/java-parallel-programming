@@ -4,5 +4,7 @@ public interface AdministrationService {
 
     boolean deleteAll();
 
+    boolean recreateBucket();
+
     int getDbSize();
 }

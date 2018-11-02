@@ -5,7 +5,9 @@ application:
       username: "admin"
       password: "admin123"
       node: "couch"
-    bucket: "DataObject"
+    bucket:
+      name: "DataObject"
+      quota: 500
     timeout: 10000
     kvTimeout: 3000
     bufferSize: 131072

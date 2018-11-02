@@ -7,4 +7,6 @@ public interface AdministrationController {
     ResponseEntity<Void> deleteAllRecords();
 
     ResponseEntity<Integer> getDbSize();
+
+    ResponseEntity<Void> recreateBucket();
 }

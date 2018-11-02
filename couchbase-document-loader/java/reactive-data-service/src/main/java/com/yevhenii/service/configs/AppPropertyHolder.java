@@ -26,7 +26,7 @@ public class AppPropertyHolder {
 
         private Cluster cluster;
 
-        private String bucket;
+        private Bucket bucket;
         private Integer timeout;
         private Integer kvTimeout;
         private Integer bufferSize;
@@ -39,6 +39,14 @@ public class AppPropertyHolder {
             private String username;
             private String password;
             private String node;
+        }
+
+        @Data
+        @AllArgsConstructor
+        @NoArgsConstructor
+        public static class Bucket {
+            private String name;
+            private Integer quota;
         }
     }
 }
