@@ -6,7 +6,7 @@ import com.google.gson.JsonParseException;
 import com.yevhenii.service.utils.JsonUtils;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import lombok.NoArgsConstructor;
+
 
 @Data
 @AllArgsConstructor

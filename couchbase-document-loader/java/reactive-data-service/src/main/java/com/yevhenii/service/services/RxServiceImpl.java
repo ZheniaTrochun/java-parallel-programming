@@ -11,17 +11,14 @@ import com.yevhenii.service.utils.FileUtils;
 import com.yevhenii.service.utils.JsonUtils;
 import com.yevhenii.service.utils.Utils;
 import io.reactivex.*;
-import io.reactivex.parallel.ParallelFlowable;
-import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
+
 
 @Slf4j
 @Service
@@ -49,7 +46,7 @@ public class RxServiceImpl implements RxService {
                 .toFlowable()
                 .flatMap(str -> Flowable.fromIterable(Utils.splitByLines(str)))
                 .parallel(PARALLELISM)
-                .flatMap(part -> deserializeAndSave(part).toFlowable())
+                .flatMap(line -> deserializeAndSave(line).toFlowable())
                 .sequential()
                 .doOnError(err -> log.error(err.getMessage()))
                 .doOnComplete(dao::closeCurrentBucket);
@@ -83,11 +80,6 @@ public class RxServiceImpl implements RxService {
 //                .map(StringBuffer::new)
 //                .reduce(StringBuffer::append)
 //                .map(StringBuffer::toString);
-    }
-
-    private Flowable<String> divideIntoParts(List<String> list) {
-        return Flowable.fromIterable(Utils.divideIntoParts(list, PARALLELISM))
-                .concatMap(lst -> Flowable.fromIterable(lst).subscribeOn(Schedulers.computation()));
     }
 
     private Single<Document<DataObject>> deserializeAndSave(String str) {

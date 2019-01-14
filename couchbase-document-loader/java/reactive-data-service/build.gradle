@@ -31,7 +31,6 @@ repositories {
 
 dependencies {
 //    spring boot
-//    compile('org.springframework.boot:spring-boot-starter-webflux:2.0.5.RELEASE')
     compile('org.springframework.boot:spring-boot-starter-web:2.0.5.RELEASE')
 
 //    for reactive endpoints

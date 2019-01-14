@@ -1,10 +1,12 @@
 application:
   couchbase:
     cluster:
-      url: "http://couch:8091"
+      url: "http://localhost:8091"
+#      url: "http://couch:8091"
       username: "admin"
       password: "admin123"
-      node: "couch"
+      node: "localhost"
+#      node: "couch"
     bucket:
       name: "DataObject"
       quota: 500
@@ -14,13 +16,3 @@ application:
   parallelism: 10
   datafile: "data.txt"
   pageSize: 1000
-
-
-#logging:
-#  level:
-#    org.springframework: DEBUG
-#    com.yevhenii.service: DEBUG
-#  pattern:
-#    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
-#    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
-#  file: logs/application.log

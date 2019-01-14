@@ -6,10 +6,8 @@ import com.yevhenii.service.dao.CouchbaseDao;
 import com.yevhenii.service.models.DataObject;
 import com.yevhenii.service.models.Document;
 import com.yevhenii.service.models.dto.DataObjectDto;
-import com.yevhenii.service.profiling.Profilers;
 import com.yevhenii.service.utils.FileUtils;
 import com.yevhenii.service.utils.JsonUtils;
-import com.yevhenii.service.utils.Pair;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -21,6 +19,7 @@ import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
 
 @Slf4j
 @Service
@@ -39,24 +38,27 @@ public class SequentialServiceImpl implements SequentialService {
         this.DEFAULT_FILE = properties.getDatafile();
     }
 
-//    TODO rewrite
     @Override
     public List<Document<DataObject>> loadDataFromFile() throws IOException {
         File file = new File(DEFAULT_FILE);
         Optional<String> content = FileUtils.readPart(file, 0, (int) file.length());
 
-        return content.map(str ->
-                            Arrays.stream(str.split("\n"))
-                                    .map(line -> JsonUtils.readJson(line, DataObjectDto.class))
-                                    .map(Optional::get)
-                                    .map(toDocumentConverter)
-                                    .map(dao::insert)
-                                    .collect(Collectors.toList()))
+        return content
+                .map(this::prepareContentAndWrite)
                 .orElseThrow(() -> new IOException("Error reading file: " + file.getName()));
     }
 
     @Override
     public List<Document<DataObject>> readPage(int page) {
         return dao.findAll(page);
+    }
+
+    private List<Document<DataObject>> prepareContentAndWrite(String fileContent) {
+        return Arrays.stream(fileContent.split("\n"))
+                .map(line -> JsonUtils.readJson(line, DataObjectDto.class))
+                .map(Optional::get)
+                .map(toDocumentConverter)
+                .map(dao::insert)
+                .collect(Collectors.toList());
     }
 }

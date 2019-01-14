@@ -5,7 +5,6 @@ import com.yevhenii.service.models.Document;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 
-import java.util.Optional;
 
 public interface RxService {
 
