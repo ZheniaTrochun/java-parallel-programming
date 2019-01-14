@@ -11,5 +11,7 @@ public interface DownloadController {
 
     ResponseEntity<Long> sequentialRead(Integer page);
 
+    ResponseEntity<Long> streamsRead(Integer page);
+
     Single<Long> reactiveRead(Integer page);
 }

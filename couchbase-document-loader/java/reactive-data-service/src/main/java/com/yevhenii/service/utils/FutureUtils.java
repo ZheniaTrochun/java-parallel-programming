@@ -31,7 +31,7 @@ public class FutureUtils {
 
         return list.contains(Optional.<T>empty()) ?
                 FutureUtils.failed(failError.get()) :
-                CompletableFuture.completedFuture(list.stream().map(Optional::get).collect(Collectors.toList()));
+                CompletableFuture.supplyAsync(() -> list.stream().map(Optional::get).collect(Collectors.toList()));
     }
 
     public static <R> List<CompletableFuture<R>> iterateParallel(IntStream range, Function<Integer, R> mapper) {
@@ -45,6 +45,7 @@ public class FutureUtils {
         return traverseLoop(futures, CompletableFuture.completedFuture(new ArrayList<>()));
     }
 
+//    tail recursion
     private static <T> CompletableFuture<List<T>> traverseLoop(List<CompletableFuture<T>> futureList,
                                                                CompletableFuture<List<T>> current) {
         Optional<CompletableFuture<T>> head = futureList.stream().findFirst();
@@ -54,7 +55,11 @@ public class FutureUtils {
         CompletableFuture<T> future = head.get();
         return traverseLoop(
                 futureList.stream().skip(1).collect(Collectors.toList()),
-                current.thenComposeAsync(stream -> future.thenApplyAsync(curr -> Stream.concat(stream.stream(), Stream.of(curr)).collect(Collectors.toList())))
+                current.thenComposeAsync(stream ->
+                        future.thenApplyAsync(curr ->
+                                Stream.concat(stream.stream(), Stream.of(curr)).collect(Collectors.toList())
+                        )
+                )
         );
     }
 

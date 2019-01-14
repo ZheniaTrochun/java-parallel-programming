@@ -11,5 +11,7 @@ public interface UploadController {
 
     ResponseEntity<Integer> sequentialUpload();
 
+    ResponseEntity<Integer> streamUpload();
+
     Single<Integer> reactiveUpload();
 }

@@ -72,6 +72,11 @@ public class DownloadControllerImpl implements DownloadController {
     }
 
     @Override
+    public ResponseEntity<Long> streamsRead(Integer page) {
+        return null;
+    }
+
+    @Override
     @RequestMapping(method = RequestMethod.GET, path = "/data/download/rx/{page}")
     public Single<Long> reactiveRead(@PathVariable Integer page) {
         return rxService.readPage(page)
