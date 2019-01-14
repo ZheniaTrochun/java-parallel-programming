@@ -17,7 +17,6 @@ import java.io.File;
 
 import java.io.IOException;
 import java.util.*;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 
@@ -29,7 +28,6 @@ public class SequentialServiceImpl implements SequentialService {
     private final String DEFAULT_FILE;
 
     private final CouchbaseDao<DataObject> dao;
-    private final Function<DataObjectDto, Document<DataObject>> toDocumentConverter = Converters.dtoToDocumentConverter;
 
     @Autowired
     public SequentialServiceImpl(CouchbaseDao<DataObject> dao,
@@ -57,7 +55,7 @@ public class SequentialServiceImpl implements SequentialService {
         return Arrays.stream(fileContent.split("\n"))
                 .map(line -> JsonUtils.readJson(line, DataObjectDto.class))
                 .map(Optional::get)
-                .map(toDocumentConverter)
+                .map(Converters::dtoToDocumentConverter)
                 .map(dao::insert)
                 .collect(Collectors.toList());
     }

@@ -31,8 +31,6 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
 
     private final CouchbaseDao<DataObject> dao;
 
-    private final Function<DataObjectDto, Document<DataObject>> toDocumentConverter = Converters.dtoToDocumentConverter;
-
     @Autowired
     public CompletableFutureServiceImpl(CouchbaseDao<DataObject> dao, AppPropertyHolder properties) {
         this.dao = dao;
@@ -115,7 +113,7 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
 
     private List<Document<DataObject>> convertAndSave(List<DataObjectDto> objects) {
         return objects.stream()
-                .map(toDocumentConverter)
+                .map(Converters::dtoToDocumentConverter)
                 .map(dao::insert)
                 .collect(Collectors.toList());
     }

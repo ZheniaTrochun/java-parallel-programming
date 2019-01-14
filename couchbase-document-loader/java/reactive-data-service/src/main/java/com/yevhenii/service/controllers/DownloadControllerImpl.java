@@ -29,8 +29,6 @@ public class DownloadControllerImpl implements DownloadController {
     private final CompletableFutureService completableFutureService;
     private final RxService rxService;
 
-    private final Function<Document<DataObject>, DataObjectDto> dtoConverter = Converters.documentToDtoConverter;
-
     public DownloadControllerImpl(SequentialService sequentialService,
                                   CompletableFutureService completableFutureService,
                                   RxService rxService) {
@@ -47,7 +45,7 @@ public class DownloadControllerImpl implements DownloadController {
         return completableFutureService
                 .readPage(page)
                 .thenApplyAsync(list -> list.stream()
-                        .map(dtoConverter)
+                        .map(Converters::documentToDtoConverter)
                         .count()
                 )
                 .handle((list, err) ->
@@ -66,7 +64,7 @@ public class DownloadControllerImpl implements DownloadController {
     public ResponseEntity<Long> sequentialRead(@PathVariable Integer page) {
         return ResponseEntity.ok(
                 sequentialService.readPage(page).stream()
-                        .map(dtoConverter)
+                        .map(Converters::documentToDtoConverter)
                         .count()
         );
     }
@@ -77,7 +75,7 @@ public class DownloadControllerImpl implements DownloadController {
         return rxService.readPage(page)
                 .toFlowable(BackpressureStrategy.BUFFER)
                 .parallel()
-                .map(dtoConverter::apply)
+                .map(Converters::documentToDtoConverter)
                 .sequential()
                 .count();
     }

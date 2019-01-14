@@ -29,7 +29,6 @@ public class RxServiceImpl implements RxService {
     private final int PARALLELISM;
 
     private final ReactiveCouchbaseDao<DataObject> dao;
-    private final Function<DataObjectDto, Document<DataObject>> toDocumentConverter = Converters.dtoToDocumentConverter;
 
     @Autowired
     public RxServiceImpl(ReactiveCouchbaseDao<DataObject> dao,
@@ -84,7 +83,7 @@ public class RxServiceImpl implements RxService {
 
     private Single<Document<DataObject>> deserializeAndSave(String str) {
         return JsonUtils.readJson(str, DataObjectDto.class)
-                .map(toDocumentConverter)
+                .map(Converters::dtoToDocumentConverter)
                 .map(dao::insert)
                 .orElseGet(() -> Single.error(new JsonParseException(str)));
     }
