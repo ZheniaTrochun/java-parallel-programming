@@ -20,6 +20,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+
 @Slf4j
 @Service
 @EnableConfigurationProperties(AppPropertyHolder.class)
@@ -29,8 +30,6 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
     private final Integer PARALLELISM;
 
     private final CouchbaseDao<DataObject> dao;
-
-    private final Function<DataObjectDto, Document<DataObject>> toDocumentConverter = Converters.dtoToDocumentConverter;
 
     @Autowired
     public CompletableFutureServiceImpl(CouchbaseDao<DataObject> dao, AppPropertyHolder properties) {
@@ -114,7 +113,7 @@ public class CompletableFutureServiceImpl implements CompletableFutureService {
 
     private List<Document<DataObject>> convertAndSave(List<DataObjectDto> objects) {
         return objects.stream()
-                .map(toDocumentConverter)
+                .map(Converters::dtoToDocumentConverter)
                 .map(dao::insert)
                 .collect(Collectors.toList());
     }

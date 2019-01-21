@@ -27,16 +27,4 @@ public class ApplicationTests {
     public void contextLoads() {
     }
 
-//    @Test
-//    public void sequentialBenchmark() throws Exception {
-//        mockMvc.perform(get("/admin/clear-bucket"));
-//
-//        long start = System.currentTimeMillis();
-//
-//        mockMvc.perform(get("/data/upload/sequential"))
-//                .andExpect(status().isOk());
-//
-//        long end = System.currentTimeMillis();
-//        System.out.println("Squential upload took: " + (end - start) + "ms");
-//    }
 }

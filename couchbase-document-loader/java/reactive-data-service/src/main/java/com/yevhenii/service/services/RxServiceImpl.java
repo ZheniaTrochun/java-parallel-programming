@@ -11,15 +11,13 @@ import com.yevhenii.service.utils.FileUtils;
 import com.yevhenii.service.utils.JsonUtils;
 import com.yevhenii.service.utils.Utils;
 import io.reactivex.*;
-import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.stereotype.Service;
 
 import java.io.File;
-import java.util.List;
-import java.util.function.Function;
+
 
 @Slf4j
 @Service
@@ -30,7 +28,6 @@ public class RxServiceImpl implements RxService {
     private final int PARALLELISM;
 
     private final ReactiveCouchbaseDao<DataObject> dao;
-    private final Function<DataObjectDto, Document<DataObject>> toDocumentConverter = Converters.dtoToDocumentConverter;
 
     @Autowired
     public RxServiceImpl(ReactiveCouchbaseDao<DataObject> dao,
@@ -46,7 +43,10 @@ public class RxServiceImpl implements RxService {
         return readFileParallel()
                 .toFlowable()
                 .flatMap(str -> Flowable.fromIterable(Utils.splitByLines(str)))
-                .flatMap(part -> deserializeAndSave(part).toFlowable())
+//                .flatMap(part -> deserializeAndSave(part).toFlowable())
+                .parallel(PARALLELISM)
+                .flatMap(line -> deserializeAndSave(line).toFlowable())
+                .sequential()
                 .doOnError(err -> log.error(err.getMessage()))
                 .doOnComplete(dao::closeCurrentBucket);
     }
@@ -81,14 +81,9 @@ public class RxServiceImpl implements RxService {
 //                .map(StringBuffer::toString);
     }
 
-    private Flowable<String> divideIntoParts(List<String> list) {
-        return Flowable.fromIterable(Utils.divideIntoParts(list, PARALLELISM))
-                .concatMap(lst -> Flowable.fromIterable(lst).subscribeOn(Schedulers.computation()));
-    }
-
     private Single<Document<DataObject>> deserializeAndSave(String str) {
         return JsonUtils.readJson(str, DataObjectDto.class)
-                .map(toDocumentConverter)
+                .map(Converters::dtoToDocumentConverter)
                 .map(dao::insert)
                 .orElseGet(() -> Single.error(new JsonParseException(str)));
     }

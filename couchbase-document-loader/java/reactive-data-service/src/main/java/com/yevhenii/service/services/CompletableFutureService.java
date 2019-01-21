@@ -4,7 +4,6 @@ import com.yevhenii.service.models.DataObject;
 import com.yevhenii.service.models.Document;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
 public interface CompletableFutureService {
