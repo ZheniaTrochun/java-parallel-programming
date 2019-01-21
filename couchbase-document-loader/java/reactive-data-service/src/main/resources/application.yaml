@@ -15,6 +15,7 @@ application:
     bufferSize: 131072
   parallelism: 10
   datafile: "data.txt"
+  pageSize: 1000
 
 
 logging:
