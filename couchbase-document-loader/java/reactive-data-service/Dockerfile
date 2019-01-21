@@ -1,9 +1,11 @@
-FROM gradle:latest
+FROM maven:latest
 
-ADD --chown=gradle . /app
+ADD . /app
 
 WORKDIR /app
 
-CMD ["gradle", "run"]
+RUN mvn clean install -DskipTests
+
+CMD ["java", "-jar", "target/reactive-data-service-0.0.1-SNAPSHOT.jar"]
 
 EXPOSE 8080

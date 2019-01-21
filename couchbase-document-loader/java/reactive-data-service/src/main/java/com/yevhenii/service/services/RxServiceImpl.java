@@ -11,7 +11,6 @@ import com.yevhenii.service.utils.FileUtils;
 import com.yevhenii.service.utils.JsonUtils;
 import com.yevhenii.service.utils.Utils;
 import io.reactivex.*;
-import io.reactivex.parallel.ParallelFlowable;
 import io.reactivex.schedulers.Schedulers;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ import org.springframework.stereotype.Service;
 
 import java.io.File;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 @Slf4j
@@ -48,9 +46,7 @@ public class RxServiceImpl implements RxService {
         return readFileParallel()
                 .toFlowable()
                 .flatMap(str -> Flowable.fromIterable(Utils.splitByLines(str)))
-                .parallel(PARALLELISM)
                 .flatMap(part -> deserializeAndSave(part).toFlowable())
-                .sequential()
                 .doOnError(err -> log.error(err.getMessage()))
                 .doOnComplete(dao::closeCurrentBucket);
     }
@@ -69,9 +65,9 @@ public class RxServiceImpl implements RxService {
         return Flowable.range(0, PARALLELISM)
                 .parallel(PARALLELISM)
                 .map(i -> FileUtils.readPart(file, i * partSize, partSize).get())
-                .sequential()
                 .map(StringBuffer::new)
                 .reduce(StringBuffer::append)
+                .singleElement()
                 .map(StringBuffer::toString);
 //        todo same but with subscribeOn
 //        return Observable.range(0, PARALLELISM)
